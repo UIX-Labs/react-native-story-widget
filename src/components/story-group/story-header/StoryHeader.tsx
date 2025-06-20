@@ -9,7 +9,8 @@ import {
   ImageStyle,
 } from 'react-native';
 import {StoriesType} from '../../types/types';
-import StoryProgressHeader from '../story-tile/StoryProgressHeader';
+import StoryProgressHeader from './StoryProgressHeader';
+import {createStyleSheet, useStyles} from 'react-native-unistyles';
 
 interface StoryHeaderStyles {
   container?: StyleProp<ViewStyle>;
@@ -33,38 +34,6 @@ interface StoryHeaderProps {
   renderRightContent?: () => React.ReactNode;
 }
 
-const DEFAULT_STYLES = {
-  container: {
-    paddingBottom: 10,
-    backgroundColor: 'transparent',
-  } as const,
-  userInfoContainer: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    paddingHorizontal: 10,
-    marginTop: 10,
-  } as const,
-  profileImage: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    marginRight: 10,
-  } as const,
-  textContainer: {
-    flex: 1,
-  } as const,
-  title: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold' as const,
-  } as const,
-  username: {
-    color: '#ccc',
-    fontSize: 14,
-    marginTop: 2,
-  } as const,
-};
-
 const StoryHeader = ({
   storyHeader,
   currentIndex,
@@ -75,24 +44,10 @@ const StoryHeader = ({
   progressHeaderProps,
   renderRightContent,
 }: StoryHeaderProps) => {
-  const containerStyle = [DEFAULT_STYLES.container, customStyles?.container];
-  const userInfoContainerStyle = [
-    DEFAULT_STYLES.userInfoContainer,
-    customStyles?.userInfoContainer,
-  ];
-  const profileImageStyle = [
-    DEFAULT_STYLES.profileImage,
-    customStyles?.profileImage,
-  ];
-  const textContainerStyle = [
-    DEFAULT_STYLES.textContainer,
-    customStyles?.textContainer,
-  ];
-  const titleStyle = [DEFAULT_STYLES.title, customStyles?.title];
-  const usernameStyle = [DEFAULT_STYLES.username, customStyles?.username];
+  const {styles: style} = useStyles(styles);
 
   return (
-    <View style={containerStyle}>
+    <View style={[style.container, customStyles?.container]}>
       <StoryProgressHeader
         storiesCount={storiesCount}
         currentIndex={currentIndex}
@@ -100,12 +55,23 @@ const StoryHeader = ({
         isAnimated={isAnimated}
         {...progressHeaderProps}
       />
-      <View style={userInfoContainerStyle}>
-        <Image source={{uri: storyHeader.profile}} style={profileImageStyle} />
-        <View style={textContainerStyle}>
-          <Text style={titleStyle}>{storyHeader.title}</Text>
-          <Text style={usernameStyle}>{storyHeader.username}</Text>
+
+      <View style={[style.userInfoContainer, customStyles?.userInfoContainer]}>
+        {storyHeader.profile && (
+          <Image
+            source={{uri: storyHeader.profile}}
+            style={[style.profileImage, customStyles?.profileImage]}
+          />
+        )}
+        <View style={[style.textContainer, customStyles?.textContainer]}>
+          <Text style={[style.title, customStyles?.title]}>
+            {storyHeader.title}
+          </Text>
+          <Text style={[style.username, customStyles?.username]}>
+            {storyHeader.username}
+          </Text>
         </View>
+
         {renderRightContent && renderRightContent()}
       </View>
     </View>
@@ -113,3 +79,42 @@ const StoryHeader = ({
 };
 
 export default StoryHeader;
+
+const styles = createStyleSheet({
+  container: {
+    top: 40,
+    backgroundColor: 'transparent',
+  },
+
+  userInfoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    marginTop: 20,
+  },
+
+  profileImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'white',
+    marginRight: 10,
+  },
+
+  textContainer: {
+    flex: 1,
+  },
+
+  title: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+
+  username: {
+    color: '#ccc',
+    fontSize: 14,
+    marginTop: 2,
+  },
+});

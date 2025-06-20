@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import {StoriesType} from '../types/types';
 import StoryTile from './story-tile/StoryTile';
+import {createStyleSheet, useStyles} from 'react-native-unistyles';
 
 const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
 
@@ -22,6 +23,7 @@ const StoryGroup = ({
   showSeenStories = true,
   onStoryViewed,
 }: StoryGroupProps) => {
+  const {styles: style} = useStyles(styles);
   const [currentUserIndex, setCurrentUserIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
 
@@ -71,7 +73,7 @@ const StoryGroup = ({
 
       return (
         <View style={{width: screenWidth, height: screenHeight}} key={index}>
-          <View style={{flex: 1}}>
+          <View style={style.container}>
             <StoryTile
               stories={filteredStories}
               storyHeader={item}
@@ -99,7 +101,7 @@ const StoryGroup = ({
       scrollEnabled={true}
       bounces={false}
       onMomentumScrollEnd={handleUserScroll}
-      getItemLayout={(data, index) => ({
+      getItemLayout={(_data, index) => ({
         length: screenWidth,
         offset: screenWidth * index,
         index,
@@ -109,3 +111,9 @@ const StoryGroup = ({
 };
 
 export default StoryGroup;
+
+const styles = createStyleSheet({
+  container: {
+    flex: 1,
+  },
+});

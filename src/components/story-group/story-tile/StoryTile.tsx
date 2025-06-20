@@ -1,7 +1,6 @@
 import React, {useRef, useState, useEffect, useCallback} from 'react';
 import {
   Dimensions,
-  Image,
   ScrollView,
   StyleSheet,
   View,
@@ -16,6 +15,9 @@ import {
 import {Story, StoriesType} from '../../types/types';
 import Video from 'react-native-video';
 import StoryHeader from '../story-header/StoryHeader';
+import StoryContent from './components/StoryContent';
+import {VideoLoadingState} from './types';
+import {createStyleSheet, useStyles} from 'react-native-unistyles';
 
 interface StoryTileStyles {
   container?: StyleProp<ViewStyle>;
@@ -35,57 +37,24 @@ interface StoryTileProps {
   onStoryViewed?: (storyId: number) => void;
   styles?: StoryTileStyles;
   headerProps?: Partial<React.ComponentProps<typeof StoryHeader>>;
-  longPressDuration?: number;
   tapThreshold?: number;
   leftTapThreshold?: number;
   rightTapThreshold?: number;
   onStoryPress?: (story: Story, index: number) => void;
-  onStoryLongPress?: (story: Story, index: number) => void;
   onStoryStart?: (story: Story, index: number) => void;
   onStoryEnd?: (story: Story, index: number) => void;
   renderCustomContent?: (story: Story, index: number) => React.ReactNode;
   renderHeaderRightContent?: () => React.ReactNode;
   videoProps?: Partial<React.ComponentProps<typeof Video>>;
-  imageProps?: Partial<React.ComponentProps<typeof Image>>;
+  imageProps?: any;
   shouldPauseOnAppBackground?: boolean;
 }
 
 const {width: screenWidth} = Dimensions.get('window');
+const DEFAULT_IMAGE_DURATION = 5000;
+const PRELOAD_WINDOW = 1;
 
-const DEFAULT_STYLES = {
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-  } as const,
-  storyWrapper: {
-    flex: 1,
-    position: 'relative' as const,
-  } as const,
-  scrollView: {
-    flex: 1,
-  } as const,
-  storyContainer: {
-    width: screenWidth,
-    height: '100%',
-    backgroundColor: '#000',
-  } as const,
-  image: {
-    ...StyleSheet.absoluteFillObject,
-  } as const,
-  headerContainer: {
-    position: 'absolute' as const,
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1,
-    paddingTop: 5,
-    backgroundColor: 'transparent',
-  } as const,
-};
-
-const DEFAULT_IMAGE_DURATION = 5000; // 5 seconds
-
-const StoryTile = ({
+const StoryTile: React.FC<StoryTileProps> = ({
   stories,
   storyHeader,
   onComplete,
@@ -94,12 +63,10 @@ const StoryTile = ({
   onStoryViewed,
   styles: customStyles,
   headerProps,
-  longPressDuration = 500,
   tapThreshold = 300,
   leftTapThreshold = 0.3,
   rightTapThreshold = 0.7,
   onStoryPress,
-  onStoryLongPress,
   onStoryStart,
   onStoryEnd,
   renderCustomContent,
@@ -107,7 +74,7 @@ const StoryTile = ({
   videoProps,
   imageProps,
   shouldPauseOnAppBackground = true,
-}: StoryTileProps) => {
+}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(!isActive);
   const [videoProgress, setVideoProgress] = useState(0);
@@ -116,13 +83,15 @@ const StoryTile = ({
   const pressInTime = useRef(0);
   const currentStoryTimeout = useRef<NodeJS.Timeout | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
+  const [videoStates, setVideoStates] = useState<{
+    [key: number]: VideoLoadingState;
+  }>({});
 
-  // Filter out seen stories if showSeenStories is false
+  const {styles: style} = useStyles(styles);
   const filteredStories = showSeenStories
     ? stories
     : stories.filter(story => !story.isSeen);
 
-  // Function to mark story as viewed
   const markStoryAsViewed = useCallback(
     (index: number) => {
       const story = filteredStories[index];
@@ -133,32 +102,21 @@ const StoryTile = ({
     [filteredStories, onStoryViewed],
   );
 
-  // Clear any existing timeout when component unmounts or story changes
-  useEffect(() => {
-    const timeout = currentStoryTimeout.current;
-    return () => {
-      if (timeout) {
-        clearTimeout(timeout);
-      }
-    };
-  }, [currentIndex]);
-
-  // Handle active state changes
-  useEffect(() => {
-    setIsPaused(!isActive);
-    if (!isActive) {
-      const timeout = currentStoryTimeout.current;
-      if (timeout) {
-        clearTimeout(timeout);
-      }
-      imageAnim.stopAnimation();
-    } else {
-      // Reset progress when becoming active
-      setVideoProgress(0);
-      imageAnim.setValue(0);
-      videoRefs.current[currentIndex]?.seek(0);
-    }
-  }, [isActive, imageAnim, currentIndex]);
+  const updateVideoState = useCallback(
+    (index: number, updates: Partial<VideoLoadingState>) => {
+      setVideoStates(prev => ({
+        ...prev,
+        [index]: {
+          ...prev[index],
+          ...updates,
+        },
+      }));
+    },
+    [], // Empty dependency array since it doesn't depend on external values
+  );
+  const handleVideoRef = useCallback((index: number, ref: any) => {
+    videoRefs.current[index] = ref;
+  }, []);
 
   const goToNextStory = useCallback(
     (fromOnEnd = false) => {
@@ -167,13 +125,7 @@ const StoryTile = ({
       }
 
       const currentStory = filteredStories[currentIndex];
-
-      // Call onStoryEnd before moving to next
-      if (onStoryEnd) {
-        onStoryEnd(currentStory, currentIndex);
-      }
-
-      // Mark current story as viewed before moving to next
+      onStoryEnd?.(currentStory, currentIndex);
       markStoryAsViewed(currentIndex);
 
       if (currentIndex < filteredStories.length - 1) {
@@ -186,15 +138,9 @@ const StoryTile = ({
         setIsPaused(false);
         setVideoProgress(0);
         imageAnim.setValue(0);
-
-        // Call onStoryStart for the next story
-        if (onStoryStart) {
-          onStoryStart(filteredStories[nextIndex], nextIndex);
-        }
+        onStoryStart?.(filteredStories[nextIndex], nextIndex);
       } else {
-        // Mark last story as viewed before completing
         markStoryAsViewed(currentIndex);
-        // Only call onComplete when the last story actually finishes
         if (fromOnEnd) {
           onComplete?.();
         }
@@ -217,11 +163,7 @@ const StoryTile = ({
     }
 
     const currentStory = filteredStories[currentIndex];
-
-    // Call onStoryEnd before moving to previous
-    if (onStoryEnd) {
-      onStoryEnd(currentStory, currentIndex);
-    }
+    onStoryEnd?.(currentStory, currentIndex);
 
     if (currentIndex > 0) {
       const prevIndex = currentIndex - 1;
@@ -233,64 +175,57 @@ const StoryTile = ({
       setIsPaused(false);
       setVideoProgress(0);
       imageAnim.setValue(0);
-      // Reset video progress when going back
       videoRefs.current[prevIndex]?.seek(0);
-
-      // Call onStoryStart for the previous story
-      if (onStoryStart) {
-        onStoryStart(filteredStories[prevIndex], prevIndex);
-      }
+      onStoryStart?.(filteredStories[prevIndex], prevIndex);
     }
   }, [currentIndex, imageAnim, filteredStories, onStoryEnd, onStoryStart]);
 
-  // Effect to reset state when the story changes
-  useEffect(() => {
-    if (isActive) {
-      setVideoProgress(0);
-      imageAnim.setValue(0);
-      videoRefs.current[currentIndex]?.seek(0);
+  const handlePressIn = useCallback(() => {
+    pressInTime.current = Date.now();
+    // Always pause on press
+    setIsPaused(true);
+  }, []);
 
-      // Call onStoryStart when story becomes active
-      if (onStoryStart) {
-        onStoryStart(filteredStories[currentIndex], currentIndex);
-      }
-    }
-  }, [currentIndex, imageAnim, isActive, filteredStories, onStoryStart]);
+  const handlePressOut = useCallback(
+    (event: GestureResponderEvent) => {
+      const pressDuration = Date.now() - pressInTime.current;
+      const currentStory = filteredStories[currentIndex];
 
-  // Effect to handle animations and timers
-  useEffect(() => {
-    const currentStory = filteredStories[currentIndex];
+      // For short presses (taps), handle navigation
+      if (pressDuration < tapThreshold) {
+        const {locationX} = event.nativeEvent;
+        const tapPosition = locationX / screenWidth;
 
-    if (!isActive || isPaused) {
-      if (currentStory.type === 'image') {
-        imageAnim.stopAnimation();
+        if (tapPosition < leftTapThreshold) {
+          goToPrevStory();
+        } else if (tapPosition > rightTapThreshold) {
+          goToNextStory();
+        } else if (onStoryPress) {
+          onStoryPress(currentStory, currentIndex);
+        }
       }
-      if (currentStoryTimeout.current) {
-        clearTimeout(currentStoryTimeout.current);
+
+      // Always unpause on release unless we're navigating
+      const isNavigating =
+        pressDuration < tapThreshold &&
+        (event.nativeEvent.locationX / screenWidth < leftTapThreshold ||
+          event.nativeEvent.locationX / screenWidth > rightTapThreshold);
+
+      if (!isNavigating) {
+        setIsPaused(false);
       }
-    } else {
-      if (currentStory.type === 'image') {
-        const currentValue = (imageAnim as any).__getValue();
-        const duration = currentStory.duration || DEFAULT_IMAGE_DURATION;
-        Animated.timing(imageAnim, {
-          toValue: 1,
-          duration: duration * (1 - currentValue),
-          useNativeDriver: false,
-        }).start(({finished}) => {
-          if (finished) {
-            goToNextStory(true);
-          }
-        });
-      }
-    }
-  }, [
-    currentIndex,
-    isPaused,
-    filteredStories,
-    imageAnim,
-    goToNextStory,
-    isActive,
-  ]);
+    },
+    [
+      currentIndex,
+      filteredStories,
+      goToNextStory,
+      goToPrevStory,
+      onStoryPress,
+      tapThreshold,
+      leftTapThreshold,
+      rightTapThreshold,
+    ],
+  );
 
   useEffect(() => {
     if (!shouldPauseOnAppBackground) {
@@ -311,6 +246,21 @@ const StoryTile = ({
     };
   }, [shouldPauseOnAppBackground]);
 
+  const handleVideoProgress = useCallback(
+    (progress: any) => {
+      if (progress.seekableDuration > 0) {
+        const progressValue = progress.currentTime / progress.seekableDuration;
+        setVideoProgress(progressValue);
+
+        // Handle video completion
+        if (progressValue >= 0.99) {
+          goToNextStory(true);
+        }
+      }
+    },
+    [goToNextStory],
+  );
+
   const onScrollEnd = useCallback(
     (event: any) => {
       const contentOffset = event.nativeEvent.contentOffset;
@@ -324,45 +274,65 @@ const StoryTile = ({
         setVideoProgress(0);
         imageAnim.setValue(0);
         videoRefs.current[index]?.seek(0);
+        // Ensure story plays when switching between users
+        setIsPaused(false);
       }
     },
     [currentIndex, filteredStories.length, imageAnim],
   );
 
-  const handlePressIn = () => {
-    pressInTime.current = Date.now();
-    setIsPaused(true);
-  };
+  // Effect to handle active state changes
+  useEffect(() => {
+    if (!isActive) {
+      setIsPaused(true);
+      const timeout = currentStoryTimeout.current;
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+      imageAnim.stopAnimation();
+    } else {
+      // Reset pause state when becoming active
+      setIsPaused(false);
+      setVideoProgress(0);
+      imageAnim.setValue(0);
+      videoRefs.current[currentIndex]?.seek(0);
+    }
+  }, [isActive, imageAnim, currentIndex]);
 
-  const handlePressOut = (event: GestureResponderEvent) => {
-    const pressDuration = Date.now() - pressInTime.current;
+  // Effect to handle animations and timers
+  useEffect(() => {
     const currentStory = filteredStories[currentIndex];
 
-    if (pressDuration < tapThreshold) {
-      // It's a tap
-      const {locationX} = event.nativeEvent;
-      const tapPosition = locationX / screenWidth;
-
-      if (tapPosition < leftTapThreshold) {
-        goToPrevStory();
-      } else if (tapPosition > rightTapThreshold) {
-        goToNextStory();
-      } else if (onStoryPress) {
-        onStoryPress(currentStory, currentIndex);
+    if (!isActive || isPaused) {
+      if (currentStory.type === 'image') {
+        imageAnim.stopAnimation();
       }
-    } else if (pressDuration >= longPressDuration && onStoryLongPress) {
-      onStoryLongPress(currentStory, currentIndex);
+      if (currentStoryTimeout.current) {
+        clearTimeout(currentStoryTimeout.current);
+      }
+    } else {
+      if (currentStory.type === 'image') {
+        imageAnim.setValue(0);
+        const duration = DEFAULT_IMAGE_DURATION;
+        Animated.timing(imageAnim, {
+          toValue: 1,
+          duration,
+          useNativeDriver: false,
+        }).start(({finished}) => {
+          if (finished && !isPaused) {
+            goToNextStory(true);
+          }
+        });
+      }
     }
-    // Resume playback after handling navigation
-    setIsPaused(false);
-  };
-
-  const handleVideoProgress = (progress: any) => {
-    if (filteredStories[currentIndex].type === 'video') {
-      const p = progress.currentTime / progress.seekableDuration;
-      setVideoProgress(p);
-    }
-  };
+  }, [
+    currentIndex,
+    isPaused,
+    filteredStories,
+    imageAnim,
+    goToNextStory,
+    isActive,
+  ]);
 
   const getCurrentProgress = () => {
     if (filteredStories[currentIndex].type === 'image') {
@@ -371,95 +341,108 @@ const StoryTile = ({
     return videoProgress;
   };
 
-  const containerStyle = [DEFAULT_STYLES.container, customStyles?.container];
-  const storyWrapperStyle = [
-    DEFAULT_STYLES.storyWrapper,
-    customStyles?.storyWrapper,
-  ];
-  const scrollViewStyle = [DEFAULT_STYLES.scrollView, customStyles?.scrollView];
-  const storyContainerStyle = [
-    DEFAULT_STYLES.storyContainer,
-    customStyles?.storyContainer,
-  ];
-  const imageStyle = [DEFAULT_STYLES.image, customStyles?.image];
-
   return (
-    <View style={containerStyle}>
-      <View style={storyWrapperStyle}>
+    <View style={[style.container, customStyles?.container]}>
+      <View style={[style.storyWrapper, customStyles?.storyWrapper]}>
+        <View style={[style.headerContainer, customStyles?.headerContainer]}>
+          <StoryHeader
+            storyHeader={storyHeader}
+            currentIndex={currentIndex}
+            progress={getCurrentProgress()}
+            isAnimated={filteredStories[currentIndex].type === 'image'}
+            storiesCount={filteredStories.length}
+            renderRightContent={renderHeaderRightContent}
+            {...headerProps}
+          />
+        </View>
         <ScrollView
           ref={scrollViewRef}
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={onScrollEnd}
           bounces={false}
           decelerationRate={0.992}
-          style={scrollViewStyle}
+          style={[style.scrollView, customStyles?.scrollView]}
           scrollEventThrottle={16}
           snapToInterval={screenWidth}
           snapToAlignment="center"
           scrollEnabled={true}
-          directionalLockEnabled={true}>
-          {filteredStories.map((story, index) => {
-            const isCurrentStory = index === currentIndex;
-            return (
-              <Pressable
-                key={index}
-                onPressIn={handlePressIn}
-                onPressOut={handlePressOut}
-                style={[storyContainerStyle]}>
-                {renderCustomContent ? (
-                  renderCustomContent(story, index)
-                ) : story.type === 'image' ? (
-                  <Image
-                    source={{uri: story.url}}
-                    style={imageStyle}
-                    resizeMode="cover"
-                    {...imageProps}
-                  />
-                ) : (
-                  <Video
-                    source={{uri: story.url}}
-                    style={imageStyle}
-                    paused={!isActive || currentIndex !== index || isPaused}
-                    resizeMode="contain"
-                    onProgress={handleVideoProgress}
-                    ref={r => (videoRefs.current[index] = r)}
-                    onEnd={() => {
-                      if (currentIndex === index && isActive) {
-                        goToNextStory(true);
-                      }
-                    }}
-                    repeat={false}
-                    {...videoProps}
-                  />
-                )}
-                {isCurrentStory && (
-                  <View
-                    style={[
-                      DEFAULT_STYLES.headerContainer,
-                      customStyles?.headerContainer,
-                    ]}>
-                    <StoryHeader
-                      storyHeader={storyHeader}
-                      currentIndex={currentIndex}
-                      progress={getCurrentProgress()}
-                      isAnimated={
-                        filteredStories[currentIndex].type === 'image'
-                      }
-                      storiesCount={filteredStories.length}
-                      renderRightContent={renderHeaderRightContent}
-                      {...headerProps}
-                    />
-                  </View>
-                )}
-              </Pressable>
-            );
-          })}
+          directionalLockEnabled={true}
+          onMomentumScrollEnd={onScrollEnd}>
+          {filteredStories.map((story, index) => (
+            <Pressable
+              key={index}
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+              style={[style.storyContainer, customStyles?.storyContainer]}>
+              <StoryContent
+                story={story}
+                index={index}
+                currentIndex={currentIndex}
+                isActive={isActive && index === currentIndex}
+                isPaused={isPaused}
+                imageStyle={[style.image, customStyles?.image]}
+                preloadWindow={PRELOAD_WINDOW}
+                videoState={
+                  videoStates[index] || {
+                    loading: false,
+                    error: null,
+                    buffering: false,
+                  }
+                }
+                onVideoProgress={handleVideoProgress}
+                onVideoEnd={() => {
+                  if (index === currentIndex) {
+                    goToNextStory(true);
+                  }
+                }}
+                onVideoRef={ref => handleVideoRef(index, ref)}
+                onUpdateVideoState={updates => updateVideoState(index, updates)}
+                renderCustomContent={renderCustomContent}
+                videoProps={{
+                  ...videoProps,
+                  repeat: false,
+                  resizeMode: 'contain',
+                }}
+                imageProps={imageProps}
+              />
+            </Pressable>
+          ))}
         </ScrollView>
       </View>
     </View>
   );
 };
+
+const styles = createStyleSheet({
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  storyWrapper: {
+    flex: 1,
+    position: 'relative',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  storyContainer: {
+    width: screenWidth,
+    height: '100%',
+    backgroundColor: '#000',
+  },
+  image: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  headerContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1,
+    paddingTop: 5,
+    backgroundColor: 'transparent',
+  },
+});
 
 export default StoryTile;

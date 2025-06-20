@@ -60,7 +60,7 @@ export const dummyStories: StoriesType[] = [
     username: 'Sarah Wilson',
     title: 'Food Journey',
     profile:
-      'https://images.unsplash.com/photo-1494790108755-2616b612b789?w=150&h=150&fit=crop&crop=face',
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
     stories: [
       {
         id: 4,

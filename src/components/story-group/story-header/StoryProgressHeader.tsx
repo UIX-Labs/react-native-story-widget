@@ -1,96 +1,35 @@
 import React from 'react';
 import {View, Animated, ViewStyle, StyleProp} from 'react-native';
-
-interface ProgressBarStyle {
-  container?: StyleProp<ViewStyle>;
-  wrapper?: StyleProp<ViewStyle>;
-  bar?: StyleProp<ViewStyle>;
-}
+import {createStyleSheet, useStyles} from 'react-native-unistyles';
 
 interface StoryProgressHeaderProps {
   storiesCount: number;
   currentIndex: number;
   progress: number | Animated.Value;
   isAnimated?: boolean;
-  styles?: ProgressBarStyle;
   containerStyle?: StyleProp<ViewStyle>;
-  spacing?: number;
-  barHeight?: number;
-  backgroundColor?: string;
-  progressColor?: string;
-  progressOpacity?: number;
-  topSpacing?: number;
-  horizontalSpacing?: number;
+  progressWrapperStyle?: StyleProp<ViewStyle>;
+  progressBarStyle?: StyleProp<ViewStyle>;
   renderProgressBar?: (props: {
     index: number;
     progress: number | Animated.Value;
     isAnimated: boolean;
-    defaultStyles: ProgressBarStyle;
   }) => React.ReactNode;
 }
-
-const DEFAULT_STYLES = {
-  progressContainer: {
-    position: 'absolute' as const,
-    flexDirection: 'row' as const,
-    zIndex: 2,
-  } as const,
-  progressBarWrapper: {
-    flex: 1,
-    overflow: 'hidden' as const,
-  } as const,
-  progressBar: {
-    height: '100%',
-  } as const,
-};
 
 const StoryProgressHeader = ({
   storiesCount,
   currentIndex,
   progress,
   isAnimated = false,
-  styles: customStyles,
   containerStyle,
-  spacing = 4,
-  barHeight = 3,
-  backgroundColor = 'rgba(255,255,255,0.3)',
-  progressColor = 'white',
-  progressOpacity = 1,
-  topSpacing = 0,
-  horizontalSpacing = 0,
+  progressWrapperStyle,
+  progressBarStyle,
   renderProgressBar,
 }: StoryProgressHeaderProps) => {
-  const containerStyles: StyleProp<ViewStyle> = [
-    DEFAULT_STYLES.progressContainer,
-    {
-      top: topSpacing,
-      left: horizontalSpacing,
-      right: horizontalSpacing,
-      gap: spacing,
-    },
-    containerStyle,
-    customStyles?.container,
-  ];
+  const {styles: style} = useStyles(styles);
 
-  const wrapperStyles: StyleProp<ViewStyle> = [
-    DEFAULT_STYLES.progressBarWrapper,
-    {
-      height: barHeight,
-      backgroundColor,
-      borderRadius: barHeight / 2,
-    },
-    customStyles?.wrapper,
-  ];
-
-  const barStyles: StyleProp<ViewStyle> = [
-    DEFAULT_STYLES.progressBar,
-    {
-      backgroundColor: progressColor,
-      opacity: progressOpacity,
-      borderRadius: barHeight / 2,
-    },
-    customStyles?.bar,
-  ];
+  const barStyles = [style.progressBar, progressBarStyle];
 
   const getProgress = (index: number) => {
     if (index < currentIndex) {
@@ -127,23 +66,20 @@ const StoryProgressHeader = ({
   };
 
   return (
-    <View style={containerStyles}>
+    <View style={[style.progressContainer, containerStyle]}>
       {Array.from({length: storiesCount}).map((_, index) => {
         const currentProgress = getProgress(index);
         const isCurrentAnimated = isAnimated && index === currentIndex;
 
         return (
-          <View key={index} style={wrapperStyles}>
+          <View
+            key={index}
+            style={[style.progressWrapper, progressWrapperStyle]}>
             {renderProgressBar
               ? renderProgressBar({
                   index,
                   progress: currentProgress,
                   isAnimated: isCurrentAnimated,
-                  defaultStyles: {
-                    wrapper: wrapperStyles,
-                    bar: barStyles,
-                    container: containerStyles,
-                  },
                 })
               : renderDefaultProgressBar(
                   index,
@@ -158,3 +94,30 @@ const StoryProgressHeader = ({
 };
 
 export default StoryProgressHeader;
+
+const styles = createStyleSheet({
+  progressContainer: {
+    position: 'absolute',
+    flexDirection: 'row',
+    zIndex: 2,
+    top: 4,
+    left: 0,
+    right: 0,
+    gap: 4,
+  },
+
+  progressWrapper: {
+    flex: 1,
+    overflow: 'hidden',
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    top: 10,
+  },
+
+  progressBar: {
+    height: '100%',
+    borderRadius: 1.5,
+    backgroundColor: 'white',
+  },
+});
