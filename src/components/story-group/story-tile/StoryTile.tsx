@@ -8,26 +8,31 @@ import {
   GestureResponderEvent,
   AppState,
   Animated,
-  ViewStyle,
-  StyleProp,
-  ImageStyle,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
-import {Story, StoriesType} from '../../types/types';
-import Video from 'react-native-video';
+import {
+  Story,
+  StoriesType,
+  CustomHeaderRenderer,
+  HeaderData,
+} from '../../types/types';
 import StoryHeader from '../story-header/StoryHeader';
 import StoryContent from './components/StoryContent';
 import {VideoLoadingState} from './types';
 import {createStyleSheet, useStyles} from 'react-native-unistyles';
 
-interface StoryTileStyles {
-  container?: StyleProp<ViewStyle>;
-  storyWrapper?: StyleProp<ViewStyle>;
-  scrollView?: StyleProp<ViewStyle>;
-  storyContainer?: StyleProp<ViewStyle>;
-  image?: StyleProp<ImageStyle>;
-  headerContainer?: StyleProp<ViewStyle>;
+// Define types for video refs and progress
+interface VideoRefType {
+  seek: (time: number) => void;
 }
 
+interface VideoProgressType {
+  currentTime: number;
+  seekableDuration: number;
+}
+
+// Updated props with configurable thresholds
 interface StoryTileProps {
   stories: Story[];
   storyHeader: StoriesType;
@@ -35,24 +40,19 @@ interface StoryTileProps {
   isActive?: boolean;
   showSeenStories?: boolean;
   onStoryViewed?: (storyId: number) => void;
-  styles?: StoryTileStyles;
-  headerProps?: Partial<React.ComponentProps<typeof StoryHeader>>;
+  renderHeaderRightContent?: () => React.ReactNode;
+  renderCustomHeader?: CustomHeaderRenderer;
+  customHeaderData?: (storyHeader: StoriesType) => HeaderData;
   tapThreshold?: number;
   leftTapThreshold?: number;
   rightTapThreshold?: number;
-  onStoryPress?: (story: Story, index: number) => void;
-  onStoryStart?: (story: Story, index: number) => void;
-  onStoryEnd?: (story: Story, index: number) => void;
-  renderCustomContent?: (story: Story, index: number) => React.ReactNode;
-  renderHeaderRightContent?: () => React.ReactNode;
-  videoProps?: Partial<React.ComponentProps<typeof Video>>;
-  imageProps?: any;
-  shouldPauseOnAppBackground?: boolean;
+  imageDuration?: number;
 }
 
 const {width: screenWidth} = Dimensions.get('window');
 const DEFAULT_IMAGE_DURATION = 5000;
 const PRELOAD_WINDOW = 1;
+const MAX_PRESS_DURATION = 3000;
 
 const StoryTile: React.FC<StoryTileProps> = ({
   stories,
@@ -61,36 +61,42 @@ const StoryTile: React.FC<StoryTileProps> = ({
   isActive = true,
   showSeenStories = true,
   onStoryViewed,
-  styles: customStyles,
-  headerProps,
-  tapThreshold = 300,
+  renderHeaderRightContent,
+  renderCustomHeader,
+  customHeaderData,
+  tapThreshold = 300, // Default value
   leftTapThreshold = 0.3,
   rightTapThreshold = 0.7,
-  onStoryPress,
-  onStoryStart,
-  onStoryEnd,
-  renderCustomContent,
-  renderHeaderRightContent,
-  videoProps,
-  imageProps,
-  shouldPauseOnAppBackground = true,
+  imageDuration = DEFAULT_IMAGE_DURATION,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(!isActive);
   const [videoProgress, setVideoProgress] = useState(0);
   const imageAnim = useRef(new Animated.Value(0)).current;
-  const videoRefs = useRef<{[key: number]: any}>({});
+  const videoRefs = useRef<{[key: number]: VideoRefType}>({});
   const pressInTime = useRef(0);
   const currentStoryTimeout = useRef<NodeJS.Timeout | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const [videoStates, setVideoStates] = useState<{
     [key: number]: VideoLoadingState;
   }>({});
+  const lastTapTime = useRef(0); // New: For debouncing rapid taps
 
   const {styles: style} = useStyles(styles);
   const filteredStories = showSeenStories
     ? stories
     : stories.filter(story => !story.isSeen);
+
+  // Clean up video refs when stories change
+  useEffect(() => {
+    const validIndexes = filteredStories.map((_, index) => index);
+    videoRefs.current = Object.keys(videoRefs.current)
+      .filter(key => validIndexes.includes(Number(key)))
+      .reduce((acc, key) => {
+        acc[Number(key)] = videoRefs.current[Number(key)];
+        return acc;
+      }, {} as {[key: number]: VideoRefType});
+  }, [filteredStories]);
 
   const markStoryAsViewed = useCallback(
     (index: number) => {
@@ -112,11 +118,19 @@ const StoryTile: React.FC<StoryTileProps> = ({
         },
       }));
     },
-    [], // Empty dependency array since it doesn't depend on external values
+    [],
   );
-  const handleVideoRef = useCallback((index: number, ref: any) => {
-    videoRefs.current[index] = ref;
-  }, []);
+
+  const handleVideoRef = useCallback(
+    (index: number, ref: VideoRefType | null) => {
+      if (ref) {
+        videoRefs.current[index] = ref;
+      } else {
+        delete videoRefs.current[index]; // Clean up null refs
+      }
+    },
+    [],
+  );
 
   const goToNextStory = useCallback(
     (fromOnEnd = false) => {
@@ -124,8 +138,6 @@ const StoryTile: React.FC<StoryTileProps> = ({
         clearTimeout(currentStoryTimeout.current);
       }
 
-      const currentStory = filteredStories[currentIndex];
-      onStoryEnd?.(currentStory, currentIndex);
       markStoryAsViewed(currentIndex);
 
       if (currentIndex < filteredStories.length - 1) {
@@ -138,7 +150,6 @@ const StoryTile: React.FC<StoryTileProps> = ({
         setIsPaused(false);
         setVideoProgress(0);
         imageAnim.setValue(0);
-        onStoryStart?.(filteredStories[nextIndex], nextIndex);
       } else {
         markStoryAsViewed(currentIndex);
         if (fromOnEnd) {
@@ -148,12 +159,10 @@ const StoryTile: React.FC<StoryTileProps> = ({
     },
     [
       currentIndex,
-      filteredStories,
+      filteredStories.length,
       onComplete,
       imageAnim,
       markStoryAsViewed,
-      onStoryEnd,
-      onStoryStart,
     ],
   );
 
@@ -162,37 +171,38 @@ const StoryTile: React.FC<StoryTileProps> = ({
       clearTimeout(currentStoryTimeout.current);
     }
 
-    const currentStory = filteredStories[currentIndex];
-    onStoryEnd?.(currentStory, currentIndex);
-
     if (currentIndex > 0) {
       const prevIndex = currentIndex - 1;
+      setCurrentIndex(prevIndex);
       scrollViewRef.current?.scrollTo({
         x: prevIndex * screenWidth,
         animated: true,
       });
-      setCurrentIndex(prevIndex);
       setIsPaused(false);
       setVideoProgress(0);
       imageAnim.setValue(0);
       videoRefs.current[prevIndex]?.seek(0);
-      onStoryStart?.(filteredStories[prevIndex], prevIndex);
     }
-  }, [currentIndex, imageAnim, filteredStories, onStoryEnd, onStoryStart]);
+  }, [currentIndex, imageAnim]);
 
   const handlePressIn = useCallback(() => {
     pressInTime.current = Date.now();
-    // Always pause on press
     setIsPaused(true);
   }, []);
 
   const handlePressOut = useCallback(
     (event: GestureResponderEvent) => {
       const pressDuration = Date.now() - pressInTime.current;
-      const currentStory = filteredStories[currentIndex];
+      const currentTime = Date.now();
 
-      // For short presses (taps), handle navigation
-      if (pressDuration < tapThreshold) {
+      // Debounce rapid taps (within 200ms)
+      if (currentTime - lastTapTime.current < 200) {
+        return;
+      }
+      lastTapTime.current = currentTime;
+
+      // Handle short taps for navigation
+      if (pressDuration < tapThreshold && pressDuration < MAX_PRESS_DURATION) {
         const {locationX} = event.nativeEvent;
         const tapPosition = locationX / screenWidth;
 
@@ -200,27 +210,22 @@ const StoryTile: React.FC<StoryTileProps> = ({
           goToPrevStory();
         } else if (tapPosition > rightTapThreshold) {
           goToNextStory();
-        } else if (onStoryPress) {
-          onStoryPress(currentStory, currentIndex);
         }
       }
 
-      // Always unpause on release unless we're navigating
+      // Unpause unless navigating or press too long
       const isNavigating =
         pressDuration < tapThreshold &&
         (event.nativeEvent.locationX / screenWidth < leftTapThreshold ||
           event.nativeEvent.locationX / screenWidth > rightTapThreshold);
 
-      if (!isNavigating) {
+      if (!isNavigating && pressDuration < MAX_PRESS_DURATION) {
         setIsPaused(false);
       }
     },
     [
-      currentIndex,
-      filteredStories,
       goToNextStory,
       goToPrevStory,
-      onStoryPress,
       tapThreshold,
       leftTapThreshold,
       rightTapThreshold,
@@ -228,15 +233,12 @@ const StoryTile: React.FC<StoryTileProps> = ({
   );
 
   useEffect(() => {
-    if (!shouldPauseOnAppBackground) {
-      return;
-    }
-
     const handleAppStateChange = (nextAppState: string) => {
       if (nextAppState !== 'active') {
         setIsPaused(true);
       }
     };
+
     const subscription = AppState.addEventListener(
       'change',
       handleAppStateChange,
@@ -244,15 +246,14 @@ const StoryTile: React.FC<StoryTileProps> = ({
     return () => {
       subscription.remove();
     };
-  }, [shouldPauseOnAppBackground]);
+  }, []); // Empty deps since SHOULD_PAUSE_ON_APP_BACKGROUND is constant
 
   const handleVideoProgress = useCallback(
-    (progress: any) => {
+    (progress: VideoProgressType) => {
       if (progress.seekableDuration > 0) {
         const progressValue = progress.currentTime / progress.seekableDuration;
         setVideoProgress(progressValue);
 
-        // Handle video completion
         if (progressValue >= 0.99) {
           goToNextStory(true);
         }
@@ -262,7 +263,7 @@ const StoryTile: React.FC<StoryTileProps> = ({
   );
 
   const onScrollEnd = useCallback(
-    (event: any) => {
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const contentOffset = event.nativeEvent.contentOffset;
       const index = Math.round(contentOffset.x / screenWidth);
       if (
@@ -274,24 +275,20 @@ const StoryTile: React.FC<StoryTileProps> = ({
         setVideoProgress(0);
         imageAnim.setValue(0);
         videoRefs.current[index]?.seek(0);
-        // Ensure story plays when switching between users
         setIsPaused(false);
       }
     },
     [currentIndex, filteredStories.length, imageAnim],
   );
 
-  // Effect to handle active state changes
   useEffect(() => {
     if (!isActive) {
       setIsPaused(true);
-      const timeout = currentStoryTimeout.current;
-      if (timeout) {
-        clearTimeout(timeout);
+      if (currentStoryTimeout.current) {
+        clearTimeout(currentStoryTimeout.current);
       }
       imageAnim.stopAnimation();
     } else {
-      // Reset pause state when becoming active
       setIsPaused(false);
       setVideoProgress(0);
       imageAnim.setValue(0);
@@ -299,24 +296,24 @@ const StoryTile: React.FC<StoryTileProps> = ({
     }
   }, [isActive, imageAnim, currentIndex]);
 
-  // Effect to handle animations and timers
   useEffect(() => {
     const currentStory = filteredStories[currentIndex];
+    // Capture the timeout at the beginning of the effect
+    const timeoutToCancel = currentStoryTimeout.current;
 
     if (!isActive || isPaused) {
-      if (currentStory.type === 'image') {
+      if (currentStory?.type === 'image') {
         imageAnim.stopAnimation();
       }
       if (currentStoryTimeout.current) {
         clearTimeout(currentStoryTimeout.current);
       }
     } else {
-      if (currentStory.type === 'image') {
+      if (currentStory?.type === 'image') {
         imageAnim.setValue(0);
-        const duration = DEFAULT_IMAGE_DURATION;
         Animated.timing(imageAnim, {
           toValue: 1,
-          duration,
+          duration: imageDuration,
           useNativeDriver: false,
         }).start(({finished}) => {
           if (finished && !isPaused) {
@@ -325,6 +322,14 @@ const StoryTile: React.FC<StoryTileProps> = ({
         });
       }
     }
+
+    return () => {
+      // Use the captured timeout value
+      imageAnim.stopAnimation();
+      if (timeoutToCancel) {
+        clearTimeout(timeoutToCancel);
+      }
+    };
   }, [
     currentIndex,
     isPaused,
@@ -332,29 +337,32 @@ const StoryTile: React.FC<StoryTileProps> = ({
     imageAnim,
     goToNextStory,
     isActive,
+    imageDuration,
   ]);
 
   const getCurrentProgress = () => {
-    if (filteredStories[currentIndex].type === 'image') {
+    if (filteredStories[currentIndex]?.type === 'image') {
       return imageAnim;
     }
     return videoProgress;
   };
 
   return (
-    <View style={[style.container, customStyles?.container]}>
-      <View style={[style.storyWrapper, customStyles?.storyWrapper]}>
-        <View style={[style.headerContainer, customStyles?.headerContainer]}>
+    <View style={style.container}>
+      <View style={style.storyWrapper}>
+        <View style={style.headerContainer}>
           <StoryHeader
             storyHeader={storyHeader}
             currentIndex={currentIndex}
             progress={getCurrentProgress()}
-            isAnimated={filteredStories[currentIndex].type === 'image'}
+            isAnimated={filteredStories[currentIndex]?.type === 'image'}
             storiesCount={filteredStories.length}
             renderRightContent={renderHeaderRightContent}
-            {...headerProps}
+            renderCustomHeader={renderCustomHeader}
+            customHeaderData={customHeaderData}
           />
         </View>
+
         <ScrollView
           ref={scrollViewRef}
           horizontal
@@ -362,7 +370,7 @@ const StoryTile: React.FC<StoryTileProps> = ({
           showsHorizontalScrollIndicator={false}
           bounces={false}
           decelerationRate={0.992}
-          style={[style.scrollView, customStyles?.scrollView]}
+          style={style.scrollView}
           scrollEventThrottle={16}
           snapToInterval={screenWidth}
           snapToAlignment="center"
@@ -371,17 +379,21 @@ const StoryTile: React.FC<StoryTileProps> = ({
           onMomentumScrollEnd={onScrollEnd}>
           {filteredStories.map((story, index) => (
             <Pressable
-              key={index}
+              key={story.id || index} // Use story.id for stable keys
               onPressIn={handlePressIn}
               onPressOut={handlePressOut}
-              style={[style.storyContainer, customStyles?.storyContainer]}>
+              style={style.storyContainer}
+              accessibilityLabel={`Story ${index + 1} of ${
+                filteredStories.length
+              }`}
+              accessibilityRole="button">
               <StoryContent
                 story={story}
                 index={index}
                 currentIndex={currentIndex}
                 isActive={isActive && index === currentIndex}
                 isPaused={isPaused}
-                imageStyle={[style.image, customStyles?.image]}
+                imageStyle={style.image}
                 preloadWindow={PRELOAD_WINDOW}
                 videoState={
                   videoStates[index] || {
@@ -398,13 +410,10 @@ const StoryTile: React.FC<StoryTileProps> = ({
                 }}
                 onVideoRef={ref => handleVideoRef(index, ref)}
                 onUpdateVideoState={updates => updateVideoState(index, updates)}
-                renderCustomContent={renderCustomContent}
                 videoProps={{
-                  ...videoProps,
                   repeat: false,
                   resizeMode: 'contain',
                 }}
-                imageProps={imageProps}
               />
             </Pressable>
           ))}
@@ -414,6 +423,7 @@ const StoryTile: React.FC<StoryTileProps> = ({
   );
 };
 
+// Styles remain unchanged
 const styles = createStyleSheet({
   container: {
     flex: 1,

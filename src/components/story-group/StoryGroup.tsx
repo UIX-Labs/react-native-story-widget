@@ -6,7 +6,7 @@ import {
   NativeSyntheticEvent,
   View,
 } from 'react-native';
-import {StoriesType} from '../types/types';
+import {StoriesType, CustomHeaderRenderer, HeaderData} from '../types/types';
 import StoryTile from './story-tile/StoryTile';
 import {createStyleSheet, useStyles} from 'react-native-unistyles';
 
@@ -16,12 +16,16 @@ interface StoryGroupProps {
   userStories: StoriesType[];
   showSeenStories?: boolean;
   onStoryViewed?: (userId: number, storyId: number) => void;
+  renderCustomHeader?: CustomHeaderRenderer;
+  customHeaderData?: (storyHeader: StoriesType) => HeaderData;
 }
 
 const StoryGroup = ({
   userStories,
   showSeenStories = true,
   onStoryViewed,
+  renderCustomHeader,
+  customHeaderData,
 }: StoryGroupProps) => {
   const {styles: style} = useStyles(styles);
   const [currentUserIndex, setCurrentUserIndex] = useState(0);
@@ -81,12 +85,21 @@ const StoryGroup = ({
               isActive={index === currentUserIndex}
               showSeenStories={showSeenStories}
               onStoryViewed={handleStoryViewed}
+              renderCustomHeader={renderCustomHeader}
+              customHeaderData={customHeaderData}
             />
           </View>
         </View>
       );
     },
-    [currentUserIndex, showSeenStories, handleStoryComplete, handleStoryViewed],
+    [
+      currentUserIndex,
+      showSeenStories,
+      handleStoryComplete,
+      handleStoryViewed,
+      renderCustomHeader,
+      customHeaderData,
+    ],
   );
 
   return (

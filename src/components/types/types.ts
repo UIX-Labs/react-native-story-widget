@@ -22,38 +22,52 @@ export interface StoriesType {
   timestamp?: number;
 }
 
+// User-facing customization types only
+export interface HeaderData {
+  profile?: string;
+  username: string;
+  title: string;
+  timestamp?: number;
+  [key: string]: any; // Allow custom fields
+}
+
+export interface StoryViewContext {
+  story: Story;
+  storyIndex: number;
+  storyHeader: StoriesType;
+  currentProgress: number;
+  isActive: boolean;
+  isPaused: boolean;
+  totalStories: number;
+}
+
+export interface CoreStoryFunctionality {
+  goToNext: () => void;
+  goToPrevious: () => void;
+  pause: () => void;
+  resume: () => void;
+  markAsViewed: () => void;
+}
+
+export interface CustomHeaderRenderer {
+  (props: {
+    headerData: HeaderData;
+    renderDefaultProgressHeader: () => React.ReactNode;
+  }): React.ReactNode;
+}
+
+export interface CustomStoryViewer {
+  (props: {
+    context: StoryViewContext;
+    navigation: CoreStoryFunctionality;
+    renderDefaultStory: () => React.ReactNode;
+  }): React.ReactNode;
+}
 export interface StoryCarouselProps {
   stories: StoriesType[];
-  onComplete?: (viewedStories?: boolean[][]) => void;
-  onChangePosition?: (progressIndex: number, storyIndex: number) => void;
-  transitionMode?: 'Default' | 'Cube' | 'Scale';
-  renderOverlayView?: (item?: Story) => React.JSX.Element;
-  overlayViewPosition?: 'top' | 'middle' | 'bottom';
   showSeenStories?: boolean;
   onStoryViewed?: (userId: number, storyId: number) => void;
+  renderCustomHeader?: CustomHeaderRenderer;
+  headerData?: (storyHeader: StoriesType) => HeaderData;
   renderHeaderRightContent?: () => React.ReactNode;
-  headerProps?: {
-    styles?: {
-      container?: any;
-      userInfoContainer?: any;
-      profileImage?: any;
-      textContainer?: any;
-      title?: any;
-      username?: any;
-    };
-    progressHeaderProps?: {
-      styles?: {
-        container?: any;
-        wrapper?: any;
-        bar?: any;
-      };
-      spacing?: number;
-      barHeight?: number;
-      backgroundColor?: string;
-      progressColor?: string;
-      progressOpacity?: number;
-      topSpacing?: number;
-      horizontalSpacing?: number;
-    };
-  };
 }

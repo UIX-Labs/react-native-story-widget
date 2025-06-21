@@ -8,7 +8,7 @@ import {
   TextStyle,
   ImageStyle,
 } from 'react-native';
-import {StoriesType} from '../../types/types';
+import {StoriesType, HeaderData, CustomHeaderRenderer} from '../../types/types';
 import StoryProgressHeader from './StoryProgressHeader';
 import {createStyleSheet, useStyles} from 'react-native-unistyles';
 
@@ -32,6 +32,10 @@ interface StoryHeaderProps {
     React.ComponentProps<typeof StoryProgressHeader>
   >;
   renderRightContent?: () => React.ReactNode;
+
+  // New flexible rendering props
+  renderCustomHeader?: CustomHeaderRenderer;
+  customHeaderData?: (storyHeader: StoriesType) => HeaderData;
 }
 
 const StoryHeader = ({
@@ -43,18 +47,46 @@ const StoryHeader = ({
   styles: customStyles,
   progressHeaderProps,
   renderRightContent,
+  renderCustomHeader,
+  customHeaderData,
 }: StoryHeaderProps) => {
   const {styles: style} = useStyles(styles);
 
+  const renderDefaultProgressHeader = () => (
+    <StoryProgressHeader
+      storiesCount={storiesCount}
+      currentIndex={currentIndex}
+      progress={progress}
+      isAnimated={isAnimated}
+      {...progressHeaderProps}
+    />
+  );
+
+  // If custom header renderer is provided, use it
+  if (renderCustomHeader) {
+    const headerData: HeaderData = customHeaderData
+      ? customHeaderData(storyHeader)
+      : {
+          profile: storyHeader.profile,
+          username: storyHeader.username,
+          title: storyHeader.title,
+          timestamp: storyHeader.timestamp,
+        };
+
+    return (
+      <View style={[style.container, customStyles?.container]}>
+        {renderCustomHeader({
+          headerData,
+          renderDefaultProgressHeader,
+        })}
+      </View>
+    );
+  }
+
+  // Default header implementation (backwards compatibility)
   return (
     <View style={[style.container, customStyles?.container]}>
-      <StoryProgressHeader
-        storiesCount={storiesCount}
-        currentIndex={currentIndex}
-        progress={progress}
-        isAnimated={isAnimated}
-        {...progressHeaderProps}
-      />
+      {renderDefaultProgressHeader()}
 
       <View style={[style.userInfoContainer, customStyles?.userInfoContainer]}>
         {storyHeader.profile && (
