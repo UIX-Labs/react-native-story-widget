@@ -17,7 +17,7 @@ import {
   CustomHeaderRenderer,
   HeaderData,
 } from '../../types/types';
-import StoryHeader from '../story-header/StoryHeader';
+import StoryHeader, {StoryHeaderStyles} from '../story-header/StoryHeader';
 import StoryContent from './components/StoryContent';
 import {VideoLoadingState} from './types';
 import {createStyleSheet, useStyles} from 'react-native-unistyles';
@@ -47,6 +47,8 @@ interface StoryTileProps {
   leftTapThreshold?: number;
   rightTapThreshold?: number;
   imageDuration?: number;
+  headerStyles?: StoryHeaderStyles;
+  showHeader?: boolean;
 }
 
 const {width: screenWidth} = Dimensions.get('window');
@@ -68,6 +70,8 @@ const StoryTile: React.FC<StoryTileProps> = ({
   leftTapThreshold = 0.3,
   rightTapThreshold = 0.7,
   imageDuration = DEFAULT_IMAGE_DURATION,
+  headerStyles,
+  showHeader = true,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(!isActive);
@@ -350,18 +354,21 @@ const StoryTile: React.FC<StoryTileProps> = ({
   return (
     <View style={style.container}>
       <View style={style.storyWrapper}>
-        <View style={style.headerContainer}>
-          <StoryHeader
-            storyHeader={storyHeader}
-            currentIndex={currentIndex}
-            progress={getCurrentProgress()}
-            isAnimated={filteredStories[currentIndex]?.type === 'image'}
-            storiesCount={filteredStories.length}
-            renderRightContent={renderHeaderRightContent}
-            renderCustomHeader={renderCustomHeader}
-            customHeaderData={customHeaderData}
-          />
-        </View>
+        {showHeader && (
+          <View style={style.headerContainer}>
+            <StoryHeader
+              storyHeader={storyHeader}
+              currentIndex={currentIndex}
+              progress={getCurrentProgress()}
+              isAnimated={filteredStories[currentIndex]?.type === 'image'}
+              storiesCount={filteredStories.length}
+              renderRightContent={renderHeaderRightContent}
+              renderCustomHeader={renderCustomHeader}
+              customHeaderData={customHeaderData}
+              styles={headerStyles}
+            />
+          </View>
+        )}
 
         <ScrollView
           ref={scrollViewRef}

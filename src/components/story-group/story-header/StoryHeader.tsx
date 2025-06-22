@@ -12,7 +12,7 @@ import {StoriesType, HeaderData, CustomHeaderRenderer} from '../../types/types';
 import StoryProgressHeader from './StoryProgressHeader';
 import {createStyleSheet, useStyles} from 'react-native-unistyles';
 
-interface StoryHeaderStyles {
+export interface StoryHeaderStyles {
   container?: StyleProp<ViewStyle>;
   userInfoContainer?: StyleProp<ViewStyle>;
   profileImage?: StyleProp<ImageStyle>;
