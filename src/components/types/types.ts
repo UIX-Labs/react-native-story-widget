@@ -70,4 +70,9 @@ export interface StoryCarouselProps {
   renderCustomHeader?: CustomHeaderRenderer;
   headerData?: (storyHeader: StoriesType) => HeaderData;
   renderHeaderRightContent?: () => React.ReactNode;
+  preloadWindow?: number;
+  tapThreshold?: number;
+  leftTapThreshold?: number;
+  rightTapThreshold?: number;
+  showHeader?: boolean;
 }
