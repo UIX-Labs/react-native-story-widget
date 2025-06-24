@@ -1,43 +1,66 @@
 {
-  "name": "MyApp",
-  "version": "0.0.1",
-  "private": true,
+  "name": "react-native-story-widget",
+  "version": "1.0.0",
+  "description": "A React Native story widget component with carousel functionality",
+  "main": "lib/index.js",
+  "module": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib",
+    "src",
+    "README.md"
+  ],
   "scripts": {
-    "android": "react-native run-android",
-    "ios": "react-native run-ios",
+    "build": "tsc",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run clean && npm run build",
+    "postinstall": "echo 'Please ensure peer dependencies are installed: react-native-gesture-handler, react-native-safe-area-context, react-native-unistyles, react-native-video'",
     "lint": "eslint .",
-    "start": "react-native start",
-    "test": "jest"
+    "test": "jest",
+    "test-package": "node scripts/test-package.js",
+    "clean": "rm -rf lib",
+    "pack-local": "npm pack"
   },
-  "dependencies": {
-    "@gorhom/bottom-sheet": "^5.1.6",
-    "react": "18.3.1",
-    "react-native": "0.76.9",
+  "keywords": [
+    "react-native",
+    "story",
+    "stories",
+    "widget",
+    "carousel",
+    "media",
+    "instagram",
+    "snapchat"
+  ],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/react-native-story-widget.git"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-native": ">=0.60.0",
+    "react-native-gesture-handler": ">=2.0.0",
+    "react-native-safe-area-context": ">=4.0.0",
+    "react-native-unistyles": ">=2.0.0",
+    "react-native-video": ">=6.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@gorhom/bottom-sheet": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.6",
+    "eslint": "^8.19.0",
+    "prettier": "2.8.8",
+    "react": "^18.3.1",
+    "react-native": "^0.76.9",
     "react-native-gesture-handler": "^2.26.0",
     "react-native-safe-area-context": "^5.4.1",
     "react-native-unistyles": "^2.42.0",
     "react-native-video": "^6.11.0",
-    "reactotron-react-native": "^5.1.13"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.25.2",
-    "@babel/preset-env": "^7.25.3",
-    "@babel/runtime": "^7.25.0",
-    "@react-native-community/cli": "15.0.1",
-    "@react-native-community/cli-platform-android": "15.0.1",
-    "@react-native-community/cli-platform-ios": "15.0.1",
-    "@react-native/babel-preset": "0.76.9",
-    "@react-native/eslint-config": "0.76.9",
-    "@react-native/metro-config": "0.76.9",
-    "@react-native/typescript-config": "0.76.9",
-    "@types/react": "^18.2.6",
-    "@types/react-test-renderer": "^18.0.0",
-    "babel-jest": "^29.6.3",
-    "eslint": "^8.19.0",
-    "jest": "^29.6.3",
-    "prettier": "2.8.8",
-    "react-test-renderer": "18.3.1",
-    "typescript": "5.0.4"
+    "typescript": "^5.0.4"
   },
   "engines": {
     "node": ">=18"

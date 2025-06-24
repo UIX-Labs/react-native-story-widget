@@ -1,26 +1,20 @@
-// Main component export
-export {default as StoryCarousel} from './components/story-carousel/ StoryCarousel';
+// Main components
+export {default as Story} from './components/story/ui/Story';
+export {default as StoryGroup} from './components/story-group/StoryGroup';
 
-// Type exports - organized by category
+// Types
 export type {
-  // Core data types
-  Story,
+  IStory,
   StoriesType,
-
-  // Customization types
-  HeaderData,
-  StoryViewContext,
-  CoreStoryFunctionality,
-
-  // Renderer function types
-  CustomHeaderRenderer,
-  CustomStoryViewer,
-
-  // Main component props
   StoryCarouselProps,
 } from './components/types/types';
 
-// Example components for reference (optional - can be imported separately)
-export {default as CustomHeaderExample} from './components/examples/CustomHeaderExample';
-export {default as CustomStoryViewerExample} from './components/examples/CustomStoryViewerExample';
-export {default as ProgressTestExample} from './components/examples/ProgressTestExample';
+// Contexts
+export {
+  StoryContext,
+  StoryMediaControlContext,
+} from './components/story/ui/Story';
+
+// Utility components
+export {default as Image} from './shared/ui/Image';
+export {default as Video} from './shared/ui/Video';
