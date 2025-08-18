@@ -1,6 +1,6 @@
 {
   "name": "react-native-story-widget",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A React Native story widget component with carousel functionality",
   "main": "lib/index.js",
   "module": "lib/index.js",
@@ -31,11 +31,11 @@
     "instagram",
     "snapchat"
   ],
-  "author": "Your Name <your.email@example.com>",
+  "author": "UIX Labs <info@uixlabs.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/react-native-story-widget.git"
+    "url": "https://github.com/UIX-Labs/react-native-story-widget"
   },
   "peerDependencies": {
     "react": ">=16.8.0",
