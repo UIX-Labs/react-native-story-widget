@@ -50,19 +50,25 @@ interface StoryTileProps {
   stories: IStory[];
   storyHeader: StoriesType;
   onStoryViewed: (type: 'next' | 'previous') => void;
+  onStoryMarkedAsViewed?: (storyId: string) => void;
   isStoryActive: boolean;
+  initialStoryIndex: number;
+  onPressCloseButton: () => void;
 }
 
 const Story: React.FC<StoryTileProps> = ({
   stories,
   storyHeader,
   onStoryViewed,
+  onStoryMarkedAsViewed,
   isStoryActive,
+  initialStoryIndex,
+  onPressCloseButton,
 }) => {
   const [currentStory, setCurrentStory] = useState<{
     index: number;
     progress: number;
-  }>({index: 0, progress: 0});
+  }>({index: initialStoryIndex, progress: 0});
 
   const {styles: style} = useStyles(styles);
 
@@ -151,17 +157,16 @@ const Story: React.FC<StoryTileProps> = ({
       setCurrentStory(cs => ({index: cs.index, progress: Math.min(1, value)}));
 
       if (value >= 1) {
+        onStoryMarkedAsViewed?.(stories[index].storyId.toString());
         goToStory(index + 1);
       }
     },
-    [currentStory.index, goToStory],
+    [currentStory.index, goToStory, stories, onStoryMarkedAsViewed],
   );
 
   return (
     <StoryContext.Provider value={contextValue}>
       <View style={[style.container]}>
-        <StoryHeader storyHeader={storyHeader} storiesCount={stories.length} />
-
         {isStoryActive && (
           <StoryMediaControlContext.Provider
             value={{
@@ -175,6 +180,14 @@ const Story: React.FC<StoryTileProps> = ({
             <StoryMedia stories={stories} />
           </StoryMediaControlContext.Provider>
         )}
+
+        <View style={style.headerOverlay}>
+          <StoryHeader
+            storyHeader={storyHeader}
+            storiesCount={stories.length}
+            onPressClose={onPressCloseButton}
+          />
+        </View>
       </View>
     </StoryContext.Provider>
   );
@@ -183,6 +196,13 @@ const Story: React.FC<StoryTileProps> = ({
 const styles = createStyleSheet({
   container: {
     flex: 1,
+  },
+  headerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
 });
 

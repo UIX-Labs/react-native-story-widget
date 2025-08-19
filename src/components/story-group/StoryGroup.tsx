@@ -17,15 +17,33 @@ const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
 
 interface StoryGroupProps {
   userStories: StoriesType[];
-  onStoryViewed?: (userId: number, storyId: number) => void;
+  initialGroupIndex: number;
+  initialStoryIndex: number;
+  markSeen: (storyId: string) => void;
+  onPressCloseButton: () => void;
 }
 
-const StoryGroup = ({userStories}: StoryGroupProps) => {
+const StoryGroup = ({
+  userStories,
+  initialGroupIndex,
+  initialStoryIndex,
+  markSeen,
+  onPressCloseButton,
+}: StoryGroupProps) => {
   const {styles: style} = useStyles(styles);
   const [insetTop, setInsetTop] = useState<number | null>(null);
   const flatListRef = useRef<FlatList>(null);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    if (initialGroupIndex > 0 && userStories.length > initialGroupIndex) {
+      flatListRef.current?.scrollToIndex({
+        index: initialGroupIndex,
+        animated: false,
+      });
+    }
+  }, [initialGroupIndex]);
 
   useEffect(() => {
     setInsetTop(p => {
@@ -56,6 +74,8 @@ const StoryGroup = ({userStories}: StoryGroupProps) => {
 
   const renderUserStory = useCallback(
     ({item, index}: {item: StoriesType; index: number}) => {
+      const storyInitialIndex =
+        index === initialGroupIndex ? initialStoryIndex : 0;
       return (
         <View
           style={[
@@ -71,6 +91,9 @@ const StoryGroup = ({userStories}: StoryGroupProps) => {
             storyHeader={item}
             onStoryViewed={type => onStoryViewed(index, type)}
             isStoryActive={currentStoryIndex === index}
+            initialStoryIndex={storyInitialIndex}
+            onStoryMarkedAsViewed={markSeen}
+            onPressCloseButton={onPressCloseButton}
           />
         </View>
       );
@@ -82,7 +105,7 @@ const StoryGroup = ({userStories}: StoryGroupProps) => {
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       setCurrentStoryIndex(
         clamp(
-          Math.floor(
+          Math.ceil(
             +e.nativeEvent.contentOffset.x.toFixed(0) / +screenWidth.toFixed(0),
           ),
           0,
