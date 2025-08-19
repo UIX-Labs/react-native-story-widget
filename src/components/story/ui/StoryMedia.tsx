@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import {createStyleSheet, useStyles} from 'react-native-unistyles';
 
+import type {VideoProgressType} from '../../../shared/controller';
 import Image from '../../../shared/ui/Image';
 import Video from '../../../shared/ui/Video';
 import type {IStory} from '../../types/types';
@@ -15,11 +16,6 @@ import {StoryContext} from './Story';
 
 interface StoryTileProps {
   stories: IStory[];
-}
-
-interface VideoProgressType {
-  currentTime: number;
-  seekableDuration: number;
 }
 
 import {StoryMediaControlContext} from './Story';
@@ -150,8 +146,7 @@ const StoryMedia: React.FC<StoryTileProps> = ({stories}) => {
 
 const styles = createStyleSheet({
   storyContainer: {
-    width: screenWidth,
-    height: '100%',
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: '#000',
   },
 });

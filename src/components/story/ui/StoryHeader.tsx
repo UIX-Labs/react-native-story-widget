@@ -1,4 +1,3 @@
-/* eslint-disable react/display-name */
 import React, {useContext} from 'react';
 import {
   Image,

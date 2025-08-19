@@ -33,7 +33,7 @@ const StoryGroup = ({
   const {styles: style} = useStyles(styles);
   const [insetTop, setInsetTop] = useState<number | null>(null);
   const flatListRef = useRef<FlatList>(null);
-  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
+  const [currentStoryIndex, setCurrentStoryIndex] = useState(initialGroupIndex);
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
@@ -76,6 +76,7 @@ const StoryGroup = ({
     ({item, index}: {item: StoriesType; index: number}) => {
       const storyInitialIndex =
         index === initialGroupIndex ? initialStoryIndex : 0;
+
       return (
         <View
           style={[
@@ -98,7 +99,7 @@ const StoryGroup = ({
         </View>
       );
     },
-    [style.container, onStoryViewed, currentStoryIndex],
+    [onStoryViewed, currentStoryIndex, initialStoryIndex],
   );
 
   const onMomentumScrollEnd = useCallback(
