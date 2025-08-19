@@ -1,4 +1,4 @@
-import type {IStory} from '../../types/types';
+import {IStory} from '../../types';
 
 export interface VideoProgressType {
   currentTime: number;
