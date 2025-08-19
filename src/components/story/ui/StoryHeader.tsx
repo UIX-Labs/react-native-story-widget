@@ -3,6 +3,7 @@ import React, {useContext} from 'react';
 import {
   Image,
   ImageStyle,
+  Pressable,
   StyleProp,
   Text,
   TextStyle,
@@ -30,10 +31,16 @@ interface StoryHeaderProps {
     progressWrapperStyle?: StyleProp<ViewStyle>;
     progressBarStyle?: StyleProp<ViewStyle>;
   };
+  onPressClose: () => void;
 }
 
 const StoryHeader = React.memo(
-  ({storyHeader, storiesCount, progressHeaderProps}: StoryHeaderProps) => {
+  ({
+    storyHeader,
+    storiesCount,
+    progressHeaderProps,
+    onPressClose,
+  }: StoryHeaderProps) => {
     const {
       currentStory: {index: currentStoryIndex, progress: currentStoryProgress},
     } = useContext(StoryContext);
@@ -77,16 +84,36 @@ const StoryHeader = React.memo(
         </View>
 
         <View style={style.userInfoContainer}>
-          {storyHeader.profile && (
+          <View
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+              gap: 8,
+              alignItems: 'center',
+            }}>
             <Image
               source={{uri: storyHeader.profile}}
               style={style.profileImage}
             />
-          )}
-          <View style={style.textContainer}>
-            <Text style={style.title}>{storyHeader.title}</Text>
-            <Text style={style.username}>{storyHeader.username}</Text>
+
+            <View style={style.textContainer}>
+              <Text style={style.title}>{storyHeader.title}</Text>
+              {storyHeader.stories[currentStoryIndex] && (
+                <Text style={style.username}>
+                  {storyHeader.stories[currentStoryIndex].title}
+                </Text>
+              )}
+            </View>
           </View>
+          <Pressable
+            style={styles.closeButton}
+            onPress={onPressClose}
+            hitSlop={24}>
+            <Image
+              source={require('@assets/cross.png')}
+              style={styles.closeIcon}
+            />
+          </Pressable>
         </View>
       </View>
     );
@@ -118,6 +145,8 @@ const styles = createStyleSheet({
     borderWidth: 1,
     borderColor: 'white',
     marginRight: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   textContainer: {
@@ -146,12 +175,27 @@ const styles = createStyleSheet({
     overflow: 'hidden',
     height: 3,
     borderRadius: 1.5,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: '#464646',
     top: 10,
   },
   progressBar: {
     height: '100%',
     borderRadius: 1.5,
-    backgroundColor: 'white',
+    backgroundColor: '#00ffd1',
+  },
+
+  closeButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+
+  closeIcon: {
+    width: 16,
+    height: 16,
+    tintColor: 'white',
   },
 });
