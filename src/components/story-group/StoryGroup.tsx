@@ -3,6 +3,7 @@ import {
   Dimensions,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  Platform,
   View,
 } from 'react-native';
 import {FlatList} from 'react-native-gesture-handler';
@@ -106,9 +107,15 @@ const StoryGroup = ({
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       setCurrentStoryIndex(
         clamp(
-          Math.ceil(
-            +e.nativeEvent.contentOffset.x.toFixed(0) / +screenWidth.toFixed(0),
-          ),
+          Platform.OS === 'ios'
+            ? Math.floor(
+                +e.nativeEvent.contentOffset.x.toFixed(0) /
+                  +screenWidth.toFixed(0),
+              )
+            : Math.ceil(
+                +e.nativeEvent.contentOffset.x.toFixed(0) /
+                  +screenWidth.toFixed(0),
+              ),
           0,
           userStories.length - 1,
         ),
