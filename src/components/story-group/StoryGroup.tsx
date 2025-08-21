@@ -39,25 +39,18 @@ const StoryGroup = ({
 
   useEffect(() => {
     if (
-      initialGroupIndex > 0 &&
+      initialGroupIndex >= 0 &&
       userStories.length > initialGroupIndex &&
-      Platform.OS !== 'ios'
+      flatListRef.current
     ) {
-      flatListRef.current?.scrollToIndex({
-        index: initialGroupIndex,
-        animated: false,
-      });
-    } else {
-      if (flatListRef.current) {
-        requestAnimationFrame(() => {
-          flatListRef.current?.scrollToIndex({
-            index: initialGroupIndex,
-            animated: false,
-          });
+      requestAnimationFrame(() => {
+        flatListRef.current?.scrollToIndex({
+          index: initialGroupIndex,
+          animated: false,
         });
-      }
+      });
     }
-  }, [initialGroupIndex]);
+  }, [initialGroupIndex, userStories.length]);
 
   useEffect(() => {
     setInsetTop(p => {
