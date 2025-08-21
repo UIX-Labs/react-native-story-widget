@@ -39,10 +39,19 @@ const StoryGroup = ({
 
   useEffect(() => {
     if (
-      initialGroupIndex >= 0 &&
-      userStories.length > initialGroupIndex &&
-      flatListRef.current
+      !flatListRef.current ||
+      initialGroupIndex < 0 ||
+      userStories.length <= initialGroupIndex
     ) {
+      return;
+    }
+
+    if (Platform.OS === 'android') {
+      flatListRef.current.scrollToIndex({
+        index: initialGroupIndex,
+        animated: false,
+      });
+    } else {
       requestAnimationFrame(() => {
         flatListRef.current?.scrollToIndex({
           index: initialGroupIndex,
@@ -50,7 +59,7 @@ const StoryGroup = ({
         });
       });
     }
-  }, [initialGroupIndex, userStories.length]);
+  }, []);
 
   useEffect(() => {
     setInsetTop(p => {
