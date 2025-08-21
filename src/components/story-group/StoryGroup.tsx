@@ -38,7 +38,20 @@ const StoryGroup = ({
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
-    if (flatListRef.current) {
+    if (
+      !flatListRef.current ||
+      initialGroupIndex < 0 ||
+      userStories.length <= initialGroupIndex
+    ) {
+      return;
+    }
+
+    if (Platform.OS === 'android') {
+      flatListRef.current.scrollToIndex({
+        index: initialGroupIndex,
+        animated: false,
+      });
+    } else {
       requestAnimationFrame(() => {
         flatListRef.current?.scrollToIndex({
           index: initialGroupIndex,
