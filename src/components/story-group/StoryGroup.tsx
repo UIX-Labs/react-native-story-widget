@@ -38,15 +38,26 @@ const StoryGroup = ({
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
-    if (flatListRef.current) {
-      requestAnimationFrame(() => {
-        flatListRef.current?.scrollToIndex({
-          index: initialGroupIndex,
-          animated: false,
-        });
+    if (
+      initialGroupIndex > 0 &&
+      userStories.length > initialGroupIndex &&
+      Platform.OS !== 'ios'
+    ) {
+      flatListRef.current?.scrollToIndex({
+        index: initialGroupIndex,
+        animated: false,
       });
+    } else {
+      if (flatListRef.current) {
+        requestAnimationFrame(() => {
+          flatListRef.current?.scrollToIndex({
+            index: initialGroupIndex,
+            animated: false,
+          });
+        });
+      }
     }
-  }, []);
+  }, [initialGroupIndex]);
 
   useEffect(() => {
     setInsetTop(p => {
