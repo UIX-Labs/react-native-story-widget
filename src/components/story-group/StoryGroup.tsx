@@ -38,13 +38,15 @@ const StoryGroup = ({
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
-    if (initialGroupIndex > 0 && userStories.length > initialGroupIndex) {
-      flatListRef.current?.scrollToIndex({
-        index: initialGroupIndex,
-        animated: false,
+    if (flatListRef.current) {
+      requestAnimationFrame(() => {
+        flatListRef.current?.scrollToIndex({
+          index: initialGroupIndex,
+          animated: false,
+        });
       });
     }
-  }, [initialGroupIndex]);
+  }, []);
 
   useEffect(() => {
     setInsetTop(p => {

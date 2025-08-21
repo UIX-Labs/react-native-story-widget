@@ -1,6 +1,6 @@
 {
   "name": "react-native-story-widget",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A React Native story widget component with carousel functionality",
   "main": "lib/index.js",
   "module": "lib/index.js",
