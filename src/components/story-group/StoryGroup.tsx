@@ -1,18 +1,22 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
+  Animated,
   Dimensions,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  PanResponder,
   Platform,
   View,
 } from 'react-native';
 import {FlatList} from 'react-native-gesture-handler';
+import {Easing} from 'react-native-reanimated';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {createStyleSheet, useStyles} from 'react-native-unistyles';
 
 import {clamp} from '../../shared/lib/clamp';
 import {Story} from '../story';
 import {StoriesType} from '../types/types';
+import {useNavigation} from '@react-navigation/native';
 
 const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
 
@@ -36,6 +40,47 @@ const StoryGroup = ({
   const flatListRef = useRef<FlatList>(null);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(initialGroupIndex);
   const insets = useSafeAreaInsets();
+
+  const navigation = useNavigation();
+
+  const panY = useRef(new Animated.Value(0)).current;
+
+  const THRESHOLD = screenHeight * 0.1;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dy) > 5;
+      },
+
+      onPanResponderMove: Animated.event([null, {dy: panY}], {
+        useNativeDriver: false,
+      }),
+
+      onPanResponderRelease: (_, gestureState) => {
+        const {dy} = gestureState;
+
+        if (dy > THRESHOLD) {
+          // Smooth exit
+          Animated.timing(panY, {
+            toValue: screenHeight,
+            duration: 200, // smoother
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }).start(() => {
+            navigation.goBack();
+          });
+        } else {
+          Animated.spring(panY, {
+            toValue: 0,
+            bounciness: 8,
+            speed: 12,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+    }),
+  ).current;
 
   useEffect(() => {
     if (
@@ -138,6 +183,49 @@ const StoryGroup = ({
     },
     [userStories.length],
   );
+
+  const backgroundOpacity = panY.interpolate({
+    inputRange: [0, screenHeight * 0.3], // up to 30% of screen height
+    outputRange: [1, 0], // fully visible → fully transparent
+    extrapolate: 'clamp',
+  });
+
+  if (Platform.OS === 'android') {
+    return (
+      <Animated.View
+        {...panResponder.panHandlers}
+        style={{
+          flex: 1,
+          backgroundColor: 'black',
+          transform: [{translateY: panY}],
+          opacity: backgroundOpacity,
+        }}>
+        <FlatList
+          ref={flatListRef}
+          data={userStories}
+          renderItem={renderUserStory}
+          keyExtractor={item => item.id.toString()}
+          horizontal
+          pagingEnabled
+          contentContainerStyle={{paddingTop: insetTop}}
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={onMomentumScrollEnd}
+          scrollEnabled={true}
+          bounces={false}
+          windowSize={3}
+          initialNumToRender={1}
+          stickyHeaderIndices={[0]}
+          maxToRenderPerBatch={1}
+          removeClippedSubviews={false}
+          getItemLayout={(_data, index) => ({
+            length: screenWidth,
+            offset: screenWidth * index,
+            index,
+          })}
+        />
+      </Animated.View>
+    );
+  }
 
   return (
     <FlatList
