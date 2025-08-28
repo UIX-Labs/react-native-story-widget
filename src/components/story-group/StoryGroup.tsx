@@ -4,9 +4,14 @@ import {
   NativeScrollEvent,
   NativeSyntheticEvent,
   Platform,
-  View,
 } from 'react-native';
-import {FlatList} from 'react-native-gesture-handler';
+import {FlatList, Gesture, GestureDetector} from 'react-native-gesture-handler';
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {createStyleSheet, useStyles} from 'react-native-unistyles';
 
@@ -35,7 +40,9 @@ const StoryGroup = ({
   const [insetTop, setInsetTop] = useState<number | null>(null);
   const flatListRef = useRef<FlatList>(null);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(initialGroupIndex);
+  const [isDragging, setIsDragging] = useState(false);
   const insets = useSafeAreaInsets();
+  const CLOSE_THRESHOLD = screenHeight * 0.25;
 
   useEffect(() => {
     if (
@@ -88,34 +95,71 @@ const StoryGroup = ({
     [userStories.length],
   );
 
+  const translateY = useSharedValue(0);
+
+  const context = useSharedValue({
+    y: 0,
+  });
+
+  const rBottomSheetStyles = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateY: translateY.value,
+        },
+      ],
+    };
+  });
+
+  const gesture = Gesture.Pan()
+    .onStart(() => {
+      context.value = {y: translateY.value};
+      runOnJS(setIsDragging)(true);
+    })
+    .onUpdate(event => {
+      translateY.value = Math.max(0, event.translationY + context.value.y);
+    })
+    .onEnd(() => {
+      if (translateY.value > CLOSE_THRESHOLD) {
+        runOnJS(onPressCloseButton)();
+        runOnJS(setIsDragging)(false);
+      } else {
+        translateY.value = withSpring(0, {damping: 15});
+        runOnJS(setIsDragging)(false);
+      }
+    });
+
   const renderUserStory = useCallback(
     ({item, index}: {item: StoriesType; index: number}) => {
       const storyInitialIndex =
         index === initialGroupIndex ? initialStoryIndex : 0;
 
       return (
-        <View
-          style={[
-            {
-              width: screenWidth,
-              height: screenHeight,
-            },
-            style.container,
-          ]}
-          key={index}>
-          <Story
-            stories={item.stories}
-            storyHeader={item}
-            onStoryViewed={type => onStoryViewed(index, type)}
-            isStoryActive={currentStoryIndex === index}
-            initialStoryIndex={storyInitialIndex}
-            onStoryMarkedAsViewed={markSeen}
-            onPressCloseButton={onPressCloseButton}
-          />
-        </View>
+        <GestureDetector gesture={gesture}>
+          <Animated.View
+            style={[
+              {
+                width: screenWidth,
+                height: screenHeight,
+              },
+              style.container,
+              rBottomSheetStyles,
+            ]}
+            key={index}>
+            <Story
+              stories={item.stories}
+              storyHeader={item}
+              onStoryViewed={type => onStoryViewed(index, type)}
+              isStoryActive={currentStoryIndex === index && !isDragging}
+              initialStoryIndex={storyInitialIndex}
+              onStoryMarkedAsViewed={markSeen}
+              onPressCloseButton={onPressCloseButton}
+            />
+          </Animated.View>
+        </GestureDetector>
       );
     },
-    [onStoryViewed, currentStoryIndex, initialStoryIndex],
+    [onStoryViewed, currentStoryIndex, initialStoryIndex, isDragging],
   );
 
   const onMomentumScrollEnd = useCallback(
