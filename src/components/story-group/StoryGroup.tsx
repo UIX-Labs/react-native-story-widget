@@ -12,6 +12,7 @@ import {createStyleSheet, useStyles} from 'react-native-unistyles';
 
 import {clamp} from '../../shared/lib/clamp';
 import {Story} from '../story';
+import type {StoryTileProps} from '../story/ui/Story';
 import {StoriesType} from '../types/types';
 
 const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
@@ -22,6 +23,7 @@ interface StoryGroupProps {
   initialStoryIndex: number;
   markSeen: (storyId: string) => void;
   onPressCloseButton: () => void;
+  onStoryStart?: (storyId: string) => void;
 }
 
 const StoryGroup = ({
@@ -30,6 +32,7 @@ const StoryGroup = ({
   initialStoryIndex,
   markSeen,
   onPressCloseButton,
+  onStoryStart,
 }: StoryGroupProps) => {
   const {styles: style} = useStyles(styles);
   const [insetTop, setInsetTop] = useState<number | null>(null);
@@ -111,6 +114,7 @@ const StoryGroup = ({
             initialStoryIndex={storyInitialIndex}
             onStoryMarkedAsViewed={markSeen}
             onPressCloseButton={onPressCloseButton}
+            onStoryStart={onStoryStart}
           />
         </View>
       );
