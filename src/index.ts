@@ -7,6 +7,9 @@ export type {
   IStory,
   StoriesType,
   StoryCarouselProps,
+  ReactionType,
+  StoryReaction,
+  StoryReactionProps,
 } from './components/types/types';
 
 // Contexts
