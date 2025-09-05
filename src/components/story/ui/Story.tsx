@@ -10,9 +10,10 @@ import {Image as RNImage, View} from 'react-native';
 import {createStyleSheet, useStyles} from 'react-native-unistyles';
 
 import {clamp} from '../../../shared/lib/clamp';
-import type {IStory, StoriesType} from '../../types/types';
+import type {IStory, StoriesType, ReactionType} from '../../types/types';
 import StoryHeader from './StoryHeader';
 import StoryMedia from './StoryMedia';
+import StoryReactions from './StoryReactions';
 
 export const StoryContext = createContext<{
   currentStory: {
@@ -46,7 +47,7 @@ export const StoryMediaControlContext = createContext<{
   isPaused: true,
 });
 
-interface StoryTileProps {
+export interface StoryTileProps {
   stories: IStory[];
   storyHeader: StoriesType;
   onStoryViewed: (type: 'next' | 'previous') => void;
@@ -54,6 +55,8 @@ interface StoryTileProps {
   isStoryActive: boolean;
   initialStoryIndex: number;
   onPressCloseButton: () => void;
+  onStoryStart?: (storyId: string) => void;
+  onStoryReaction?: (storyId: string, reaction: ReactionType) => void;
 }
 
 const Story: React.FC<StoryTileProps> = ({
@@ -64,6 +67,8 @@ const Story: React.FC<StoryTileProps> = ({
   isStoryActive,
   initialStoryIndex,
   onPressCloseButton,
+  onStoryStart,
+  onStoryReaction,
 }) => {
   const [currentStory, setCurrentStory] = useState<{
     index: number;
@@ -84,6 +89,16 @@ const Story: React.FC<StoryTileProps> = ({
   useEffect(() => {
     setIsPaused(!isStoryActive);
   }, [isStoryActive]);
+
+  // Call onStoryStart when story becomes active or when current story changes
+  useEffect(() => {
+    if (isStoryActive && onStoryStart) {
+      const currentStoryData = stories[currentStory.index];
+      if (currentStoryData) {
+        onStoryStart(currentStoryData.storyId.toString());
+      }
+    }
+  }, [isStoryActive, currentStory.index, onStoryStart, stories, storyHeader.id]);
 
   useEffect(() => {
     const next = stories[currentStory.index + 1];
@@ -137,6 +152,18 @@ const Story: React.FC<StoryTileProps> = ({
     }
   }, [isStoryActive]);
 
+  const handleReaction = useCallback(
+    (reaction: ReactionType) => {
+      if (onStoryReaction) {
+        const currentStoryData = stories[currentStory.index];
+        if (currentStoryData) {
+          onStoryReaction(currentStoryData.storyId.toString(), reaction);
+        }
+      }
+    },
+    [onStoryReaction, stories, currentStory.index],
+  );
+
   const handleProgress = useCallback(
     (
       index: number,
@@ -188,6 +215,10 @@ const Story: React.FC<StoryTileProps> = ({
             onPressClose={onPressCloseButton}
           />
         </View>
+        <StoryReactions
+          onReaction={handleReaction}
+          isVisible={isStoryActive && !!onStoryReaction}
+        />
       </View>
     </StoryContext.Provider>
   );

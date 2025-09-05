@@ -26,3 +26,18 @@ export interface StoryCarouselProps {
   stories: StoriesType[];
   onStoryViewed?: (userId: number, storyId: number) => void;
 }
+
+export type ReactionType = '❤️' | '👏' | '👍';
+
+export interface StoryReaction {
+  storyId: string;
+  userId: number;
+  reaction: ReactionType;
+  timestamp: number;
+}
+
+export interface StoryReactionProps {
+  onReaction?: (storyId: string, reaction: ReactionType) => void;
+  reactions?: StoryReaction[];
+  currentUserId?: number;
+}
