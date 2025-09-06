@@ -21,7 +21,7 @@ interface StoryGroupProps {
   userStories: StoriesType[];
   initialGroupIndex: number;
   initialStoryIndex: number;
-  markSeen: (storyId: string) => void;
+  markSeen?: (storyId: string) => void;
   onPressCloseButton: () => void;
   onStoryStart?: (storyId: string) => void;
   onStoryReaction?: (storyId: string, reaction: ReactionType) => void;
