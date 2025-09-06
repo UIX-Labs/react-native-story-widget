@@ -29,6 +29,12 @@ export interface StoryCarouselProps {
 
 export type ReactionType = '❤️' | '👏' | '👍';
 
+export interface StoryReactionEmoji {
+  id: string;
+  name: string;
+  image: string;
+}
+
 export interface StoryReaction {
   storyId: string;
   userId: number;
@@ -40,4 +46,5 @@ export interface StoryReactionProps {
   onReaction?: (storyId: string, reaction: ReactionType) => void;
   reactions?: StoryReaction[];
   currentUserId?: number;
+  storyReactionEmojis?: StoryReactionEmoji[];
 }

@@ -1,35 +1,40 @@
 import React from 'react';
-import {View, TouchableOpacity, Text} from 'react-native';
+import {View, TouchableOpacity, Image} from 'react-native';
 import {createStyleSheet, useStyles} from 'react-native-unistyles';
 
-import {ReactionType} from '../../types/types';
+import {ReactionType, StoryReactionEmoji} from '../../types/types';
 
 interface StoryReactionsProps {
   onReaction: (reaction: ReactionType) => void;
   isVisible: boolean;
+  storyReactionEmojis?: StoryReactionEmoji[];
 }
-
-const reactions: ReactionType[] = ['❤️', '👏', '👍'];
 
 const StoryReactions: React.FC<StoryReactionsProps> = ({
   onReaction,
   isVisible,
+  storyReactionEmojis,
 }) => {
   const {styles} = useStyles(stylesheet);
 
-  if (!isVisible) {
+  // Only show reactions if they are provided and component is visible
+  if (!isVisible || !storyReactionEmojis || storyReactionEmojis.length === 0) {
     return null;
   }
 
   return (
     <View style={styles.container}>
-      {reactions.map((reaction, index) => (
+      {storyReactionEmojis.map((reaction) => (
         <TouchableOpacity
-          key={reaction}
+          key={reaction.id}
           style={styles.reactionButton}
-          onPress={() => onReaction(reaction)}
+          onPress={() => onReaction(reaction.name as ReactionType)}
           activeOpacity={0.7}>
-          <Text style={styles.reactionEmoji}>{reaction}</Text>
+          <Image 
+            source={{uri: reaction.image}} 
+            style={styles.reactionImage}
+            resizeMode="contain"
+          />
         </TouchableOpacity>
       ))}
     </View>
@@ -63,7 +68,8 @@ const stylesheet = createStyleSheet(theme => ({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  reactionEmoji: {
-    fontSize: 24,
+  reactionImage: {
+    width: 24,
+    height: 24,
   },
 }));

@@ -13,7 +13,7 @@ import {createStyleSheet, useStyles} from 'react-native-unistyles';
 import {clamp} from '../../shared/lib/clamp';
 import {Story} from '../story';
 import type {StoryTileProps} from '../story/ui/Story';
-import {StoriesType, ReactionType} from '../types/types';
+import {StoriesType, ReactionType, StoryReactionEmoji} from '../types/types';
 
 const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
 
@@ -25,6 +25,7 @@ interface StoryGroupProps {
   onPressCloseButton: () => void;
   onStoryStart?: (storyId: string) => void;
   onStoryReaction?: (storyId: string, reaction: ReactionType) => void;
+  storyReactionEmojis?: StoryReactionEmoji[];
 }
 
 const StoryGroup = ({
@@ -35,6 +36,7 @@ const StoryGroup = ({
   onPressCloseButton,
   onStoryStart,
   onStoryReaction,
+  storyReactionEmojis,
 }: StoryGroupProps) => {
   const {styles: style} = useStyles(styles);
   const [insetTop, setInsetTop] = useState<number | null>(null);
@@ -118,6 +120,7 @@ const StoryGroup = ({
             onPressCloseButton={onPressCloseButton}
             onStoryStart={onStoryStart}
             onStoryReaction={onStoryReaction}
+            storyReactionEmojis={storyReactionEmojis}
           />
         </View>
       );

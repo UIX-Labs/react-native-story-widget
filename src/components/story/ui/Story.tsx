@@ -10,7 +10,7 @@ import {Image as RNImage, View} from 'react-native';
 import {createStyleSheet, useStyles} from 'react-native-unistyles';
 
 import {clamp} from '../../../shared/lib/clamp';
-import type {IStory, StoriesType, ReactionType} from '../../types/types';
+import type {IStory, StoriesType, ReactionType, StoryReactionEmoji} from '../../types/types';
 import StoryHeader from './StoryHeader';
 import StoryMedia from './StoryMedia';
 import StoryReactions from './StoryReactions';
@@ -57,6 +57,7 @@ export interface StoryTileProps {
   onPressCloseButton: () => void;
   onStoryStart?: (storyId: string) => void;
   onStoryReaction?: (storyId: string, reaction: ReactionType) => void;
+  storyReactionEmojis?: StoryReactionEmoji[];
 }
 
 const Story: React.FC<StoryTileProps> = ({
@@ -69,6 +70,7 @@ const Story: React.FC<StoryTileProps> = ({
   onPressCloseButton,
   onStoryStart,
   onStoryReaction,
+  storyReactionEmojis,
 }) => {
   const [currentStory, setCurrentStory] = useState<{
     index: number;
@@ -217,7 +219,8 @@ const Story: React.FC<StoryTileProps> = ({
         </View>
         <StoryReactions
           onReaction={handleReaction}
-          isVisible={isStoryActive && !!onStoryReaction}
+          isVisible={isStoryActive && !!onStoryReaction && !!storyReactionEmojis && storyReactionEmojis.length > 0}
+          storyReactionEmojis={storyReactionEmojis}
         />
       </View>
     </StoryContext.Provider>

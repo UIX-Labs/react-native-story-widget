@@ -10,6 +10,7 @@ export type {
   ReactionType,
   StoryReaction,
   StoryReactionProps,
+  StoryReactionEmoji,
 } from './components/types/types';
 
 // Contexts
