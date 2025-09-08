@@ -17,7 +17,6 @@ const StoryReactions: React.FC<StoryReactionsProps> = ({
 }) => {
   const {styles} = useStyles(stylesheet);
 
-  // Only show reactions if they are provided and component is visible
   if (!isVisible || !storyReactionEmojis || storyReactionEmojis.length === 0) {
     return null;
   }

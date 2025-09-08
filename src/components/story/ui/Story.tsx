@@ -94,7 +94,6 @@ const Story: React.FC<StoryTileProps> = ({
     setIsPaused(!isStoryActive);
   }, [isStoryActive]);
 
-  // Call onStoryStart when story becomes active or when current story changes
   useEffect(() => {
     if (isStoryActive && onStoryStart) {
       const currentStoryData = stories[currentStory.index];
