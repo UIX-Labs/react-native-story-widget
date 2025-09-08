@@ -80,25 +80,32 @@ const StoryGroup = ({
 
   const onStoryViewed = useCallback(
     (index: number, type: 'next' | 'previous') => {
-      if (index === userStories.length - 1) {
+      if (type === 'previous') {
+        if (index > 0) {
+          setCurrentStoryIndex(index - 1);
+          flatListRef.current?.scrollToIndex({index: index - 1, animated: true});
+        }
         return;
       }
 
-      if (type === 'previous') {
-        setCurrentStoryIndex(index - 1);
-        flatListRef.current?.scrollToIndex({index: index - 1, animated: true});
+      if (index === userStories.length - 1) {
+        const currentStoryGroup = userStories[index];
+        if (currentStoryGroup && currentStoryGroup.stories) {
+          return;
+        }
       } else {
         setCurrentStoryIndex(index + 1);
         flatListRef.current?.scrollToIndex({index: index + 1, animated: true});
       }
     },
-    [userStories.length],
+    [userStories.length, userStories],
   );
 
   const renderUserStory = useCallback(
     ({item, index}: {item: StoriesType; index: number}) => {
       const storyInitialIndex =
         index === initialGroupIndex ? initialStoryIndex : 0;
+      const isLastStoryGroup = index === userStories.length - 1;
 
       return (
         <View
@@ -121,11 +128,12 @@ const StoryGroup = ({
             onStoryStart={onStoryStart}
             onStoryReaction={onStoryReaction}
             storyReactionEmojis={storyReactionEmojis}
+            isLastStoryGroup={isLastStoryGroup}
           />
         </View>
       );
     },
-    [onStoryViewed, currentStoryIndex, initialStoryIndex],
+    [onStoryViewed, currentStoryIndex, initialStoryIndex, userStories.length, onPressCloseButton, markSeen, onStoryStart, onStoryReaction, storyReactionEmojis],
   );
 
   const onMomentumScrollEnd = useCallback(

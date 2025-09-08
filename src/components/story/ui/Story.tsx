@@ -58,6 +58,7 @@ export interface StoryTileProps {
   onStoryStart?: (storyId: string) => void;
   onStoryReaction?: (storyId: string, reaction: ReactionType) => void;
   storyReactionEmojis?: StoryReactionEmoji[];
+  isLastStoryGroup?: boolean;
 }
 
 const Story: React.FC<StoryTileProps> = ({
@@ -71,6 +72,7 @@ const Story: React.FC<StoryTileProps> = ({
   onStoryStart,
   onStoryReaction,
   storyReactionEmojis,
+  isLastStoryGroup = false,
 }) => {
   const [currentStory, setCurrentStory] = useState<{
     index: number;
@@ -128,7 +130,11 @@ const Story: React.FC<StoryTileProps> = ({
         return;
       }
 
-      if (index >= stories.length) {
+      if (index >= stories.length) {     
+        if (isLastStoryGroup) {
+          onPressCloseButton();
+          return;
+        }
         onStoryViewed('next');
         return;
       }
@@ -136,7 +142,7 @@ const Story: React.FC<StoryTileProps> = ({
       const newIndex = clamp(index, 0, stories.length - 1);
       setCurrentStory({index: newIndex, progress: 0});
     },
-    [currentStory.index, stories.length, onStoryViewed],
+    [currentStory.index, stories.length, onStoryViewed, isLastStoryGroup, onPressCloseButton],
   );
 
   const handleLongPress = useCallback(() => {
