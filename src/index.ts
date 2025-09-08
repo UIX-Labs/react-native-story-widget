@@ -7,7 +7,6 @@ export type {
   IStory,
   StoriesType,
   StoryCarouselProps,
-  ReactionType,
   StoryReaction,
   StoryReactionProps,
   StoryReactionEmoji,

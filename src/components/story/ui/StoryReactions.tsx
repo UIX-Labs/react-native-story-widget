@@ -2,10 +2,10 @@ import React from 'react';
 import {View, TouchableOpacity, Image} from 'react-native';
 import {createStyleSheet, useStyles} from 'react-native-unistyles';
 
-import {ReactionType, StoryReactionEmoji} from '../../types/types';
+import {StoryReactionEmoji} from '../../types/types';
 
 interface StoryReactionsProps {
-  onReaction: (reaction: ReactionType) => void;
+  onReaction: (reaction: string) => void;
   isVisible: boolean;
   storyReactionEmojis?: StoryReactionEmoji[];
 }
@@ -27,7 +27,7 @@ const StoryReactions: React.FC<StoryReactionsProps> = ({
         <TouchableOpacity
           key={reaction.id}
           style={styles.reactionButton}
-          onPress={() => onReaction(reaction.name as ReactionType)}
+          onPress={() => onReaction(reaction.name)}
           activeOpacity={0.7}>
           <Image 
             source={{uri: reaction.image}} 

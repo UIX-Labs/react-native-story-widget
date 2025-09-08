@@ -10,7 +10,7 @@ import {Image as RNImage, View} from 'react-native';
 import {createStyleSheet, useStyles} from 'react-native-unistyles';
 
 import {clamp} from '../../../shared/lib/clamp';
-import type {IStory, StoriesType, ReactionType, StoryReactionEmoji} from '../../types/types';
+import type {IStory, StoriesType, StoryReactionEmoji} from '../../types/types';
 import StoryHeader from './StoryHeader';
 import StoryMedia from './StoryMedia';
 import StoryReactions from './StoryReactions';
@@ -56,7 +56,7 @@ export interface StoryTileProps {
   initialStoryIndex: number;
   onPressCloseButton: () => void;
   onStoryStart?: (storyId: string) => void;
-  onStoryReaction?: (storyId: string, reaction: ReactionType) => void;
+  onStoryReaction?: (storyId: string, reaction: string) => void;
   storyReactionEmojis?: StoryReactionEmoji[];
   isLastStoryGroup?: boolean;
 }
@@ -160,7 +160,7 @@ const Story: React.FC<StoryTileProps> = ({
   }, [isStoryActive]);
 
   const handleReaction = useCallback(
-    (reaction: ReactionType) => {
+    (reaction: string) => {
       if (onStoryReaction) {
         const currentStoryData = stories[currentStory.index];
         if (currentStoryData) {

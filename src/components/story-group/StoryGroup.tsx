@@ -13,7 +13,7 @@ import {createStyleSheet, useStyles} from 'react-native-unistyles';
 import {clamp} from '../../shared/lib/clamp';
 import {Story} from '../story';
 import type {StoryTileProps} from '../story/ui/Story';
-import {StoriesType, ReactionType, StoryReactionEmoji} from '../types/types';
+import {StoriesType, StoryReactionEmoji} from '../types/types';
 
 const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
 
@@ -24,7 +24,7 @@ interface StoryGroupProps {
   markSeen?: (storyId: string) => void;
   onPressCloseButton: () => void;
   onStoryStart?: (storyId: string) => void;
-  onStoryReaction?: (storyId: string, reaction: ReactionType) => void;
+  onStoryReaction?: (storyId: string, reaction: string) => void;
   storyReactionEmojis?: StoryReactionEmoji[];
 }
 

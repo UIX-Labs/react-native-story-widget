@@ -4,7 +4,6 @@ export type {
   StoriesType,
   StoryCarouselProps,
   StoryReactionEmoji,
-  ReactionType,
   StoryReaction,
   StoryReactionProps,
 } from './components/types/types';
