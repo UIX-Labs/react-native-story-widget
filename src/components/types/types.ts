@@ -28,22 +28,3 @@ export interface StoryCarouselProps {
 }
 
 
-export interface StoryReactionEmoji {
-  id: string;
-  name: string;
-  image: string;
-}
-
-export interface StoryReaction {
-  storyId: string;
-  userId: number;
-  reaction: string;
-  timestamp: number;
-}
-
-export interface StoryReactionProps {
-  onReaction?: (storyId: string, reaction: string) => void;
-  reactions?: StoryReaction[];
-  currentUserId?: number;
-  storyReactionEmojis?: StoryReactionEmoji[];
-}

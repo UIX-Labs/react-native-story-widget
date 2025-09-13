@@ -13,7 +13,7 @@ import {createStyleSheet, useStyles} from 'react-native-unistyles';
 import {clamp} from '../../shared/lib/clamp';
 import {Story} from '../story';
 import type {StoryTileProps} from '../story/ui/Story';
-import {StoriesType, StoryReactionEmoji} from '../types/types';
+import {StoriesType} from '../types/types';
 
 const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
 
@@ -24,8 +24,6 @@ interface StoryGroupProps {
   markSeen?: (storyId: string) => void;
   onPressCloseButton: () => void;
   onStoryStart?: (storyId: string) => void;
-  onStoryReaction?: (storyId: string, reaction: string) => void;
-  storyReactionEmojis?: StoryReactionEmoji[];
 }
 
 const StoryGroup = ({
@@ -35,8 +33,6 @@ const StoryGroup = ({
   markSeen,
   onPressCloseButton,
   onStoryStart,
-  onStoryReaction,
-  storyReactionEmojis,
 }: StoryGroupProps) => {
   const {styles: style} = useStyles(styles);
   const [insetTop, setInsetTop] = useState<number | null>(null);
@@ -126,14 +122,12 @@ const StoryGroup = ({
             onStoryMarkedAsViewed={markSeen}
             onPressCloseButton={onPressCloseButton}
             onStoryStart={onStoryStart}
-            onStoryReaction={onStoryReaction}
-            storyReactionEmojis={storyReactionEmojis}
             isLastStoryGroup={isLastStoryGroup}
           />
         </View>
       );
     },
-    [onStoryViewed, currentStoryIndex, initialStoryIndex, userStories.length, onPressCloseButton, markSeen, onStoryStart, onStoryReaction, storyReactionEmojis],
+    [onStoryViewed, currentStoryIndex, initialStoryIndex, userStories.length, onPressCloseButton, markSeen, onStoryStart],
   );
 
   const onMomentumScrollEnd = useCallback(

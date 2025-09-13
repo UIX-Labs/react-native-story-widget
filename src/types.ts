@@ -3,7 +3,4 @@ export type {
   IStory,
   StoriesType,
   StoryCarouselProps,
-  StoryReactionEmoji,
-  StoryReaction,
-  StoryReactionProps,
 } from './components/types/types';
