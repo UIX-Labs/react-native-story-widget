@@ -46,7 +46,7 @@ export const StoryMediaControlContext = createContext<{
   isPaused: true,
 });
 
-interface StoryTileProps {
+export interface StoryTileProps {
   stories: IStory[];
   storyHeader: StoriesType;
   onStoryViewed: (type: 'next' | 'previous') => void;
@@ -54,6 +54,7 @@ interface StoryTileProps {
   isStoryActive: boolean;
   initialStoryIndex: number;
   onPressCloseButton: () => void;
+  onStoryStart?: (storyId: string) => void;
 }
 
 const Story: React.FC<StoryTileProps> = ({
@@ -64,6 +65,7 @@ const Story: React.FC<StoryTileProps> = ({
   isStoryActive,
   initialStoryIndex,
   onPressCloseButton,
+  onStoryStart,
 }) => {
   const [currentStory, setCurrentStory] = useState<{
     index: number;
@@ -84,6 +86,16 @@ const Story: React.FC<StoryTileProps> = ({
   useEffect(() => {
     setIsPaused(!isStoryActive);
   }, [isStoryActive]);
+
+  // Call onStoryStart when story becomes active or when current story changes
+  useEffect(() => {
+    if (isStoryActive && onStoryStart) {
+      const currentStoryData = stories[currentStory.index];
+      if (currentStoryData) {
+        onStoryStart(currentStoryData.storyId.toString());
+      }
+    }
+  }, [isStoryActive, currentStory.index, onStoryStart, stories, storyHeader.id]);
 
   useEffect(() => {
     const next = stories[currentStory.index + 1];
