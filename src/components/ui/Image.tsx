@@ -1,10 +1,10 @@
 import React, {useCallback, useEffect, useRef} from 'react';
-import {Image as RNImage, ImageStyle, StyleProp} from 'react-native';
+import {type ImageStyle, Image as RNImage, type StyleProp} from 'react-native';
+import {DEFAULT_IMAGE_DURATION_SEC} from '../../constants';
 
 interface ImageProps {
   url: string;
   style: StyleProp<ImageStyle>;
-  // Desired duration in seconds for how long the image should be shown
   maxTime?: number;
   active?: boolean;
   paused?: boolean;
@@ -12,12 +12,10 @@ interface ImageProps {
     currentTime,
     seekableDuration,
   }: {
-    currentTime: number; // seconds elapsed
-    seekableDuration: number; // total seconds
+    currentTime: number;
+    seekableDuration: number;
   }) => void;
 }
-
-const DEFAULT_IMAGE_DURATION_SEC = 4.5;
 
 export default function Image({
   url,
@@ -28,8 +26,8 @@ export default function Image({
   onProgress,
 }: ImageProps) {
   const timerRef = useRef<number>(0);
-  const startTimeRef = useRef<number | null>(null); // performance.now() when started (ms)
-  const elapsedSecRef = useRef<number>(0); // seconds
+  const startTimeRef = useRef<number | null>(null);
+  const elapsedSecRef = useRef<number>(0);
 
   useEffect(() => {
     return () => {
@@ -40,14 +38,13 @@ export default function Image({
   }, []);
 
   const startProgress = useCallback(() => {
-    // Resume from where we paused (in seconds)
     const resumeOffsetMs = elapsedSecRef.current * 1000;
     const t1 = performance.now() - resumeOffsetMs;
     startTimeRef.current = t1;
     const helper = () => {
       const t2 = performance.now();
 
-      const elapsedSeconds = (t2 - t1) / 1000; // seconds
+      const elapsedSeconds = (t2 - t1) / 1000;
       const progress = elapsedSeconds / maxTime;
 
       if (progress >= 1) {
@@ -65,7 +62,7 @@ export default function Image({
     };
 
     timerRef.current = requestAnimationFrame(helper);
-  }, [maxTime]);
+  }, [maxTime, onProgress]);
 
   const pauseProgress = useCallback(() => {
     cancelAnimationFrame(timerRef.current);

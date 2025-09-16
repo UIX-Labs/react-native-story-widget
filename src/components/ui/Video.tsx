@@ -1,10 +1,15 @@
 import React from 'react';
-import {ImageStyle, StyleProp, StyleSheet, View} from 'react-native';
-import RnVideo, {OnProgressData} from 'react-native-video';
+import {StyleSheet, View, type ViewStyle} from 'react-native';
+import RnVideo from 'react-native-video';
+
+import {VIDEO_PROGRESS_UPDATE_INTERVAL} from '../../constants';
+import type {VideoProgressType} from '../../types';
+import {useStoryGroup} from '../composable';
+
 interface VideoProps {
   url: string;
-  style: StyleProp<ImageStyle>;
-  onProgress: (progress: OnProgressData) => void;
+  style: ViewStyle;
+  onProgress: (progress: VideoProgressType) => void;
   muted?: boolean;
   onEnd?: () => void;
   paused?: boolean;
@@ -25,14 +30,14 @@ export default function Video({
         style={style}
         resizeMode="contain"
         onProgress={onProgress}
-        progressUpdateInterval={0.25}
+        progressUpdateInterval={VIDEO_PROGRESS_UPDATE_INTERVAL}
         repeat={false}
         paused={paused}
         muted={muted}
         onEnd={onEnd}
+        ignoreSilentSwitch="obey"
         playInBackground={false}
         playWhenInactive={false}
-        ignoreSilentSwitch="obey"
       />
     </View>
   );
@@ -44,5 +49,3 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
 });
-
-export type {VideoProps};
