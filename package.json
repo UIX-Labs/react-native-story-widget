@@ -1,6 +1,6 @@
 {
   "name": "react-native-story-widget",
-  "version": "1.0.5",
+  "version": "1.0.11",
   "description": "A React Native story widget component with carousel functionality",
   "main": "lib/index.js",
   "module": "lib/index.js",
@@ -11,7 +11,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp -r src/assets lib/assets",
     "prepare": "npm run build",
     "prepublishOnly": "npm run clean && npm run build",
     "postinstall": "echo 'Please ensure peer dependencies are installed: react-native-gesture-handler, react-native-safe-area-context, react-native-unistyles, react-native-video'",
