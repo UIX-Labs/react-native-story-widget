@@ -55,7 +55,6 @@ export interface StoryGroupContextType {
   userStories: StoriesType[];
   currentGroupIndex: number;
   setCurrentGroupIndex: React.Dispatch<React.SetStateAction<number>>;
-  markSeen: (storyId: string) => void;
   onPressCloseButton: () => void;
   isScreenFocused: boolean;
 }
@@ -90,7 +89,6 @@ export interface StoryGroupProviderProps {
   userStories: StoriesType[];
   currentGroupIndex: number;
   setCurrentGroupIndex: React.Dispatch<React.SetStateAction<number>>;
-  markSeen: (storyId: string) => void;
   onPressCloseButton: () => void;
   isScreenFocused: boolean;
 }

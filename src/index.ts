@@ -1,11 +1,8 @@
 export {
   Story,
   StoryGroup,
-  StoryGroupProvider,
   StoryHeaderComponent,
   StoryMediaComponent,
-  StoryMediaControlProvider,
-  StoryProvider,
   useStory,
   useStoryGroup,
   useStoryMediaControl,

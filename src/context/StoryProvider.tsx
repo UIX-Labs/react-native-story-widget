@@ -56,7 +56,6 @@ export const useStoryMediaControl = () => {
 export const StoryGroupProvider: React.FC<StoryGroupProviderProps> = ({
   children,
   userStories,
-  markSeen,
   currentGroupIndex,
   setCurrentGroupIndex,
   onPressCloseButton,
@@ -66,7 +65,6 @@ export const StoryGroupProvider: React.FC<StoryGroupProviderProps> = ({
     userStories,
     currentGroupIndex,
     setCurrentGroupIndex,
-    markSeen,
     onPressCloseButton,
     isScreenFocused,
   };
@@ -143,6 +141,7 @@ export const StoryProvider: React.FC<StoryProviderProps> = ({
   const handlePressOut = useCallback(() => {
     if (!isLongPressingRef.current) return;
     isLongPressingRef.current = false;
+    
     if (isStoryActive) {
       setIsPaused(false);
     }
@@ -191,7 +190,7 @@ export const StoryMediaControlProvider: React.FC<
       const value = currentTime / seekableDuration;
       setCurrentStory(cs => ({index: cs.index, progress: Math.min(1, value)}));
 
-      if (value >= 1) {
+      if (value >= 0.5) {
         onStoryMarkedAsViewed?.(stories[index].storyId.toString());
         goToStory(index + 1);
       }

@@ -29,7 +29,6 @@ interface StoryGroupListProps {
   }) => ReactElement;
   userStories: StoriesType[];
   initialGroupIndex: number;
-  markSeen: (storyId: string) => void;
   onPressCloseButton: () => void;
   isScreenFocused: boolean;
   style?: ViewStyle;
@@ -40,7 +39,6 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
   style,
   userStories,
   initialGroupIndex,
-  markSeen,
   onPressCloseButton,
   isScreenFocused,
 }) => {
@@ -115,7 +113,6 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
   return (
     <StoryGroupProvider
       userStories={userStories}
-      markSeen={markSeen}
       currentGroupIndex={currentGroupIndex}
       setCurrentGroupIndex={setCurrentGroupIndex}
       onPressCloseButton={onPressCloseButton}
