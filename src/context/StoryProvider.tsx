@@ -60,6 +60,7 @@ export const StoryGroupProvider: React.FC<StoryGroupProviderProps> = ({
   setCurrentGroupIndex,
   onPressCloseButton,
   isScreenFocused,
+  onLastStoryOfGroupPlayed,
 }) => {
   const value: StoryGroupContextType = {
     userStories,
@@ -67,6 +68,7 @@ export const StoryGroupProvider: React.FC<StoryGroupProviderProps> = ({
     setCurrentGroupIndex,
     onPressCloseButton,
     isScreenFocused,
+    onLastStoryOfGroupPlayed,
   };
 
   return (
@@ -101,19 +103,27 @@ export const StoryProvider: React.FC<StoryProviderProps> = ({
   });
 
   const isLongPressingRef = useRef<boolean>(false);
-  const {setCurrentGroupIndex, isScreenFocused} = useStoryGroup();
+  const {setCurrentGroupIndex, isScreenFocused, currentGroupIndex, userStories, onLastStoryOfGroupPlayed} = useStoryGroup();
 
   useEffect(() => {
     setIsPaused(!isStoryActive || !isScreenFocused);
   }, [isStoryActive, isScreenFocused]);
 
+
   const onStoryViewed = useCallback((type: 'next' | 'previous') => {
+    setCurrentStory({index: 0, progress: 0});
+    
     if (type === 'previous') {
       setCurrentGroupIndex(p => p - 1);
     } else {
-      setCurrentGroupIndex(p => p + 1);
+      const nextIndex = currentGroupIndex + 1;
+      if (nextIndex >= userStories.length && onLastStoryOfGroupPlayed) {
+        onLastStoryOfGroupPlayed(true);
+      } else {
+        setCurrentGroupIndex(p => p + 1);
+      }
     }
-  }, []);
+  }, [setCurrentGroupIndex, currentGroupIndex, userStories.length, onLastStoryOfGroupPlayed]);
 
   const goToStory = useCallback(
     (index: number) => {

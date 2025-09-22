@@ -8,7 +8,7 @@ import {
 import {createStyleSheet, useStyles} from 'react-native-unistyles';
 
 import {SCREEN_TAP_THRESHOLDS} from '../../constants';
-import {useStory, useStoryMediaControl} from '../../context/StoryProvider';
+import {useStory, useStoryMediaControl, useStoryGroup} from '../../context/StoryProvider';
 import {transformCloudinaryVideo} from '../../utils';
 import Image from '../ui/Image';
 import Video from '../ui/Video';
@@ -17,6 +17,7 @@ const {width: screenWidth} = Dimensions.get('window');
 
 const StoryMediaComponent: React.FC = () => {
   const {stories, currentStory, isStoryActive} = useStory();
+  const {setCurrentGroupIndex} = useStoryGroup();
 
   const {onProgress, onGoToStory, onLongPress, onPressOut, isPaused} =
     useStoryMediaControl();
@@ -38,10 +39,14 @@ const StoryMediaComponent: React.FC = () => {
       if (tapPosition < SCREEN_TAP_THRESHOLDS.LEFT) {
         goToStory(currentStory.index - 1);
       } else if (tapPosition > SCREEN_TAP_THRESHOLDS.RIGHT) {
-        goToStory(currentStory.index + 1);
+        if (currentStory.index === stories.length - 1) {
+          setCurrentGroupIndex((prev: number) => prev + 1);
+        } else {
+          goToStory(currentStory.index + 1);
+        }
       }
     },
-    [currentStory.index, goToStory],
+    [currentStory.index, goToStory, stories.length, setCurrentGroupIndex],
   );
 
   const handleLongPress = useCallback(() => {

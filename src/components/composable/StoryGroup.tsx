@@ -32,6 +32,7 @@ interface StoryGroupListProps {
   onPressCloseButton: () => void;
   isScreenFocused: boolean;
   style?: ViewStyle;
+  onLastStoryOfGroupPlayed?: (isLastGroup: boolean) => void;
 }
 
 const StoryGroup: React.FC<StoryGroupListProps> = ({
@@ -41,14 +42,39 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
   initialGroupIndex,
   onPressCloseButton,
   isScreenFocused,
+  onLastStoryOfGroupPlayed,
 }) => {
-  const [currentGroupIndex, setCurrentGroupIndex] = useState(initialGroupIndex);
+  const [currentGroupIndex, setCurrentGroupIndexState] = useState(initialGroupIndex);
 
   const [insetTop, setInsetTop] = useState<number | null>(null);
   const flatListRef = useRef<FlatList>(null);
   const insets = useSafeAreaInsets();
 
   const previousOffsetX = useRef(screenWidth * initialGroupIndex);
+  const lastGroupChangeTime = useRef<number>(0);
+  const isProgrammaticChange = useRef<boolean>(false);
+
+  const setCurrentGroupIndex = useCallback((newIndex: number | ((prev: number) => number)) => {
+    const now = Date.now();
+    if (now - lastGroupChangeTime.current < 100) {
+      return;
+    }
+    lastGroupChangeTime.current = now;
+    isProgrammaticChange.current = true;
+    
+    const targetIndex = typeof newIndex === 'function' ? newIndex(currentGroupIndex) : newIndex;
+    
+    if (targetIndex >= userStories.length && onLastStoryOfGroupPlayed) {
+      onLastStoryOfGroupPlayed(true);
+      return;
+    }
+    
+    setCurrentGroupIndexState(newIndex);
+    
+    setTimeout(() => {
+      isProgrammaticChange.current = false;
+    }, 200);
+  }, [currentGroupIndex, userStories.length, onLastStoryOfGroupPlayed]);
 
   useEffect(() => {
     if (
@@ -93,6 +119,10 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
 
   const handleMomentumScrollEnd = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (isProgrammaticChange.current) {
+        return;
+      }
+
       const currentOffsetX = e.nativeEvent.contentOffset.x;
 
       if (currentOffsetX === previousOffsetX.current) {
@@ -107,7 +137,7 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
 
       previousOffsetX.current = currentOffsetX;
     },
-    [],
+    [setCurrentGroupIndex],
   );
 
   return (
@@ -116,7 +146,8 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
       currentGroupIndex={currentGroupIndex}
       setCurrentGroupIndex={setCurrentGroupIndex}
       onPressCloseButton={onPressCloseButton}
-      isScreenFocused={isScreenFocused}>
+      isScreenFocused={isScreenFocused}
+      onLastStoryOfGroupPlayed={onLastStoryOfGroupPlayed}>
       <View style={[defaultStyles.container, style]}>
         <FlatList
           ref={flatListRef}
