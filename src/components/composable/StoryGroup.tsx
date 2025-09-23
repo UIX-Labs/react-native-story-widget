@@ -64,12 +64,14 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
     
     const targetIndex = typeof newIndex === 'function' ? newIndex(currentGroupIndex) : newIndex;
     
-    if (targetIndex >= userStories.length && onLastStoryOfGroupPlayed) {
-      onLastStoryOfGroupPlayed(true);
-      return;
+    if (onLastStoryOfGroupPlayed) {
+      const isLastGroup = targetIndex >= userStories.length;
+      onLastStoryOfGroupPlayed(isLastGroup);
     }
     
-    setCurrentGroupIndexState(newIndex);
+    if (targetIndex < userStories.length) {
+      setCurrentGroupIndexState(newIndex);
+    }
     
     setTimeout(() => {
       isProgrammaticChange.current = false;

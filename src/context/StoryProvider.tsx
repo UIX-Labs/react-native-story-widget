@@ -117,9 +117,13 @@ export const StoryProvider: React.FC<StoryProviderProps> = ({
       setCurrentGroupIndex(p => p - 1);
     } else {
       const nextIndex = currentGroupIndex + 1;
-      if (nextIndex >= userStories.length && onLastStoryOfGroupPlayed) {
-        onLastStoryOfGroupPlayed(true);
-      } else {
+      
+      if (onLastStoryOfGroupPlayed) {
+        const isLastGroup = nextIndex >= userStories.length;
+        onLastStoryOfGroupPlayed(isLastGroup);
+      }
+      
+      if (nextIndex < userStories.length) {
         setCurrentGroupIndex(p => p + 1);
       }
     }
