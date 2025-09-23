@@ -44,7 +44,7 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
   isScreenFocused,
   onLastStoryOfGroupPlayed,
 }) => {
-  const [currentGroupIndex, setCurrentGroupIndexState] = useState(initialGroupIndex);
+  const [currentGroupIndex, setCurrentGroupIndex] = useState(initialGroupIndex);
 
   const [insetTop, setInsetTop] = useState<number | null>(null);
   const flatListRef = useRef<FlatList>(null);
@@ -54,7 +54,7 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
   const lastGroupChangeTime = useRef<number>(0);
   const isProgrammaticChange = useRef<boolean>(false);
 
-  const setCurrentGroupIndex = useCallback((newIndex: number | ((prev: number) => number)) => {
+  const setCurrentGroupIndexWithCallback = useCallback((newIndex: number | ((prev: number) => number)) => {
     const now = Date.now();
     if (now - lastGroupChangeTime.current < 100) {
       return;
@@ -70,7 +70,7 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
     }
     
     if (targetIndex < userStories.length) {
-      setCurrentGroupIndexState(newIndex);
+      setCurrentGroupIndex(newIndex);
     }
     
     setTimeout(() => {
@@ -131,22 +131,22 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
         return;
       }
 
-      if (currentOffsetX > previousOffsetX.current) {
-        setCurrentGroupIndex(currentGroupIndex => currentGroupIndex + 1);
-      } else {
-        setCurrentGroupIndex(currentGroupIndex => currentGroupIndex - 1);
-      }
+        if (currentOffsetX > previousOffsetX.current) {
+          setCurrentGroupIndexWithCallback(currentGroupIndex => currentGroupIndex + 1);
+        } else {
+          setCurrentGroupIndexWithCallback(currentGroupIndex => currentGroupIndex - 1);
+        }
 
       previousOffsetX.current = currentOffsetX;
     },
-    [setCurrentGroupIndex],
+    [setCurrentGroupIndexWithCallback],
   );
 
   return (
     <StoryGroupProvider
       userStories={userStories}
       currentGroupIndex={currentGroupIndex}
-      setCurrentGroupIndex={setCurrentGroupIndex}
+      setCurrentGroupIndex={setCurrentGroupIndexWithCallback}
       onPressCloseButton={onPressCloseButton}
       isScreenFocused={isScreenFocused}
       onLastStoryOfGroupPlayed={onLastStoryOfGroupPlayed}>
