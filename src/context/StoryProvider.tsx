@@ -137,7 +137,7 @@ export const StoryProvider: React.FC<StoryProviderProps> = ({
       }
 
       if (index >= stories.length) {
-        onStoryViewed('next');
+        setCurrentGroupIndex((prev: number) => prev + 1);
         return;
       }
 

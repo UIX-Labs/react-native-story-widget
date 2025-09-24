@@ -17,7 +17,6 @@ const {width: screenWidth} = Dimensions.get('window');
 
 const StoryMediaComponent: React.FC = () => {
   const {stories, currentStory, isStoryActive} = useStory();
-  const {setCurrentGroupIndex} = useStoryGroup();
 
   const {onProgress, onGoToStory, onLongPress, onPressOut, isPaused} =
     useStoryMediaControl();
@@ -39,14 +38,10 @@ const StoryMediaComponent: React.FC = () => {
       if (tapPosition < SCREEN_TAP_THRESHOLDS.LEFT) {
         goToStory(currentStory.index - 1);
       } else if (tapPosition > SCREEN_TAP_THRESHOLDS.RIGHT) {
-        if (currentStory.index === stories.length - 1) {
-          setCurrentGroupIndex((prev: number) => prev + 1);
-        } else {
-          goToStory(currentStory.index + 1);
-        }
+        goToStory(currentStory.index + 1);
       }
     },
-    [currentStory.index, goToStory, stories.length, setCurrentGroupIndex],
+    [currentStory.index, goToStory],
   );
 
   const handleLongPress = useCallback(() => {
