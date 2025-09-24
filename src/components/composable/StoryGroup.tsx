@@ -51,32 +51,6 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
   const insets = useSafeAreaInsets();
 
   const previousOffsetX = useRef(screenWidth * initialGroupIndex);
-  const lastGroupChangeTime = useRef<number>(0);
-  const isProgrammaticChange = useRef<boolean>(false);
-
-  const setCurrentGroupIndexWithCallback = useCallback((newIndex: number | ((prev: number) => number)) => {
-    const now = Date.now();
-    if (now - lastGroupChangeTime.current < 100) {
-      return;
-    }
-    lastGroupChangeTime.current = now;
-    isProgrammaticChange.current = true;
-    
-    const targetIndex = typeof newIndex === 'function' ? newIndex(currentGroupIndex) : newIndex;
-    
-    if (onLastStoryOfGroupPlayed) {
-      const isLastGroup = targetIndex >= userStories.length;
-      onLastStoryOfGroupPlayed(isLastGroup);
-    }
-    
-    if (targetIndex < userStories.length) {
-      setCurrentGroupIndex(newIndex);
-    }
-    
-    setTimeout(() => {
-      isProgrammaticChange.current = false;
-    }, 200);
-  }, [currentGroupIndex, userStories.length, onLastStoryOfGroupPlayed]);
 
   useEffect(() => {
     if (
@@ -121,10 +95,6 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
 
   const handleMomentumScrollEnd = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      if (isProgrammaticChange.current) {
-        return;
-      }
-
       const currentOffsetX = e.nativeEvent.contentOffset.x;
 
       if (currentOffsetX === previousOffsetX.current) {
@@ -132,21 +102,21 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
       }
 
         if (currentOffsetX > previousOffsetX.current) {
-          setCurrentGroupIndexWithCallback(currentGroupIndex => currentGroupIndex + 1);
+          setCurrentGroupIndex(currentGroupIndex + 1);
         } else {
-          setCurrentGroupIndexWithCallback(currentGroupIndex => currentGroupIndex - 1);
+          setCurrentGroupIndex(currentGroupIndex - 1);
         }
 
       previousOffsetX.current = currentOffsetX;
     },
-    [setCurrentGroupIndexWithCallback],
+    [],
   );
 
   return (
     <StoryGroupProvider
       userStories={userStories}
       currentGroupIndex={currentGroupIndex}
-      setCurrentGroupIndex={setCurrentGroupIndexWithCallback}
+      setCurrentGroupIndex={setCurrentGroupIndex}
       onPressCloseButton={onPressCloseButton}
       isScreenFocused={isScreenFocused}
       onLastStoryOfGroupPlayed={onLastStoryOfGroupPlayed}>

@@ -117,15 +117,9 @@ export const StoryProvider: React.FC<StoryProviderProps> = ({
       setCurrentGroupIndex(p => p - 1);
     } else {
       const nextIndex = currentGroupIndex + 1;
-      
-      if (onLastStoryOfGroupPlayed) {
-        const isLastGroup = nextIndex >= userStories.length;
-        onLastStoryOfGroupPlayed(isLastGroup);
-      }
-      
-      if (nextIndex < userStories.length) {
-        setCurrentGroupIndex(p => p + 1);
-      }
+      const isLastGroup = nextIndex >= userStories.length;      
+      setCurrentGroupIndex(p => p + 1);
+      onLastStoryOfGroupPlayed?.(isLastGroup);
     }
   }, [setCurrentGroupIndex, currentGroupIndex, userStories.length, onLastStoryOfGroupPlayed]);
 
@@ -137,7 +131,7 @@ export const StoryProvider: React.FC<StoryProviderProps> = ({
       }
 
       if (index >= stories.length) {
-        setCurrentGroupIndex((prev: number) => prev + 1);
+        onStoryViewed('next');
         return;
       }
 
