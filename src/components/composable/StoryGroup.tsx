@@ -102,9 +102,9 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
       }
 
         if (currentOffsetX > previousOffsetX.current) {
-          setCurrentGroupIndex(currentGroupIndex + 1);
+          setCurrentGroupIndex(currentGroupIndex => currentGroupIndex + 1); 
         } else {
-          setCurrentGroupIndex(currentGroupIndex - 1);
+          setCurrentGroupIndex(currentGroupIndex => currentGroupIndex - 1);
         }
 
       previousOffsetX.current = currentOffsetX;
