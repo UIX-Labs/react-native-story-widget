@@ -8,7 +8,7 @@ import {
 import {createStyleSheet, useStyles} from 'react-native-unistyles';
 
 import {SCREEN_TAP_THRESHOLDS} from '../../constants';
-import {useStory, useStoryMediaControl, useStoryGroup} from '../../context/StoryProvider';
+import {useStory, useStoryMediaControl} from '../../context/StoryProvider';
 import {transformCloudinaryVideo} from '../../utils';
 import Image from '../ui/Image';
 import Video from '../ui/Video';
