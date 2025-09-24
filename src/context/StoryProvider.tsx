@@ -110,9 +110,7 @@ export const StoryProvider: React.FC<StoryProviderProps> = ({
   }, [isStoryActive, isScreenFocused]);
 
 
-  const onStoryViewed = useCallback((type: 'next' | 'previous') => {
-    setCurrentStory({index: 0, progress: 0});
-    
+  const onStoryViewed = useCallback((type: 'next' | 'previous') => {    
     if (type === 'previous') {
       setCurrentGroupIndex(p => p - 1);
     } else {
