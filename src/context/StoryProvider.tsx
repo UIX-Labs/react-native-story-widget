@@ -112,11 +112,11 @@ export const StoryProvider: React.FC<StoryProviderProps> = ({
 
   const onStoryViewed = useCallback((type: 'next' | 'previous') => {    
     if (type === 'previous') {
-      setCurrentGroupIndex(p => p - 1);
+      setCurrentGroupIndex(currentGroupIndex - 1);
     } else {
       const nextIndex = currentGroupIndex + 1;
       const isLastGroup = nextIndex >= userStories.length;      
-      setCurrentGroupIndex(p => p + 1);
+      setCurrentGroupIndex(currentGroupIndex + 1);
       onLastStoryOfGroupPlayed?.(isLastGroup);
     }
   }, [setCurrentGroupIndex, currentGroupIndex, userStories.length, onLastStoryOfGroupPlayed]);

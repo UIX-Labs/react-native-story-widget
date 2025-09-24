@@ -50,6 +50,7 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
   const flatListRef = useRef<FlatList>(null);
   const insets = useSafeAreaInsets();
 
+  const isProgrammaticChange = useRef(false);
   const previousOffsetX = useRef(screenWidth * initialGroupIndex);
 
   useEffect(() => {
@@ -74,6 +75,7 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
         });
       });
     }
+
   }, [currentGroupIndex, userStories.length]);
 
   useEffect(() => {
@@ -95,28 +97,35 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
 
   const handleMomentumScrollEnd = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (isProgrammaticChange.current) {
+        isProgrammaticChange.current = false;
+        return;
+      }
       const currentOffsetX = e.nativeEvent.contentOffset.x;
 
       if (currentOffsetX === previousOffsetX.current) {
         return;
       }
 
-        if (currentOffsetX > previousOffsetX.current) {
-          setCurrentGroupIndex(currentGroupIndex => currentGroupIndex + 1); 
-        } else {
-          setCurrentGroupIndex(currentGroupIndex => currentGroupIndex - 1);
-        }
+      if (currentOffsetX > previousOffsetX.current) {
+        setCurrentGroupIndex(currentGroupIndex + 1); 
+      } else {
+        setCurrentGroupIndex(currentGroupIndex - 1);
+      }
 
       previousOffsetX.current = currentOffsetX;
     },
-    [],
+    [setCurrentGroupIndex],
   );
 
   return (
     <StoryGroupProvider
       userStories={userStories}
       currentGroupIndex={currentGroupIndex}
-      setCurrentGroupIndex={setCurrentGroupIndex}
+      setCurrentGroupIndex={(newIndex)=>{
+        isProgrammaticChange.current = true;
+        setCurrentGroupIndex(newIndex);
+      }}
       onPressCloseButton={onPressCloseButton}
       isScreenFocused={isScreenFocused}
       onLastStoryOfGroupPlayed={onLastStoryOfGroupPlayed}>
