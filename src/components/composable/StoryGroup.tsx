@@ -115,7 +115,7 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
 
       previousOffsetX.current = currentOffsetX;
     },
-    [setCurrentGroupIndex],
+    [setCurrentGroupIndex, currentGroupIndex],
   );
 
   return (
