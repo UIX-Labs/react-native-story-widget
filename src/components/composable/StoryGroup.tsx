@@ -32,6 +32,7 @@ interface StoryGroupListProps {
   onPressCloseButton: () => void;
   isScreenFocused: boolean;
   style?: ViewStyle;
+  onLastStoryOfGroupPlayed?: (isLastGroup: boolean) => void;
 }
 
 const StoryGroup: React.FC<StoryGroupListProps> = ({
@@ -41,6 +42,7 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
   initialGroupIndex,
   onPressCloseButton,
   isScreenFocused,
+  onLastStoryOfGroupPlayed,
 }) => {
   const [currentGroupIndex, setCurrentGroupIndex] = useState(initialGroupIndex);
 
@@ -48,6 +50,7 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
   const flatListRef = useRef<FlatList>(null);
   const insets = useSafeAreaInsets();
 
+  const isProgrammaticChange = useRef(false);
   const previousOffsetX = useRef(screenWidth * initialGroupIndex);
 
   useEffect(() => {
@@ -72,6 +75,7 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
         });
       });
     }
+
   }, [currentGroupIndex, userStories.length]);
 
   useEffect(() => {
@@ -93,6 +97,10 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
 
   const handleMomentumScrollEnd = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (isProgrammaticChange.current) {
+        isProgrammaticChange.current = false;
+        return;
+      }
       const currentOffsetX = e.nativeEvent.contentOffset.x;
 
       if (currentOffsetX === previousOffsetX.current) {
@@ -100,23 +108,27 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
       }
 
       if (currentOffsetX > previousOffsetX.current) {
-        setCurrentGroupIndex(currentGroupIndex => currentGroupIndex + 1);
+        setCurrentGroupIndex(currentGroupIndex + 1); 
       } else {
-        setCurrentGroupIndex(currentGroupIndex => currentGroupIndex - 1);
+        setCurrentGroupIndex(currentGroupIndex - 1);
       }
 
       previousOffsetX.current = currentOffsetX;
     },
-    [],
+    [setCurrentGroupIndex, currentGroupIndex],
   );
 
   return (
     <StoryGroupProvider
       userStories={userStories}
       currentGroupIndex={currentGroupIndex}
-      setCurrentGroupIndex={setCurrentGroupIndex}
+      setCurrentGroupIndex={(newIndex)=>{
+        isProgrammaticChange.current = true;
+        setCurrentGroupIndex(newIndex);
+      }}
       onPressCloseButton={onPressCloseButton}
-      isScreenFocused={isScreenFocused}>
+      isScreenFocused={isScreenFocused}
+      onLastStoryOfGroupPlayed={onLastStoryOfGroupPlayed}>
       <View style={[defaultStyles.container, style]}>
         <FlatList
           ref={flatListRef}

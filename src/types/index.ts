@@ -42,21 +42,13 @@ export interface StoryContextType {
   >;
 }
 
-export interface StoryMediaControlContextType {
-  onProgress: (index: number, progress: VideoProgressType) => void;
-  onGoToStory: (index: number) => void;
-  onLongPress: () => void;
-  onPressOut: () => void;
-  hiddenWarmUrl?: string;
-  isPaused: boolean;
-}
-
 export interface StoryGroupContextType {
   userStories: StoriesType[];
   currentGroupIndex: number;
-  setCurrentGroupIndex: React.Dispatch<React.SetStateAction<number>>;
+  setCurrentGroupIndex: (newIndex: number) => void;
   onPressCloseButton: () => void;
   isScreenFocused: boolean;
+  onLastStoryOfGroupPlayed?: (isLastGroup: boolean) => void;
 }
 
 export interface StoryContextType {
@@ -88,9 +80,10 @@ export interface StoryGroupProviderProps {
   children: ReactNode;
   userStories: StoriesType[];
   currentGroupIndex: number;
-  setCurrentGroupIndex: React.Dispatch<React.SetStateAction<number>>;
+  setCurrentGroupIndex: (newIndex: number) => void;
   onPressCloseButton: () => void;
   isScreenFocused: boolean;
+  onLastStoryOfGroupPlayed?: (isLastGroup: boolean) => void;
 }
 
 export interface StoryMediaControlProviderProps {
