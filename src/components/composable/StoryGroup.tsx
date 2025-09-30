@@ -101,18 +101,15 @@ const StoryGroup: React.FC<StoryGroupListProps> = ({
         isProgrammaticChange.current = false;
         return;
       }
+      
       const currentOffsetX = e.nativeEvent.contentOffset.x;
-
-      if (currentOffsetX === previousOffsetX.current) {
-        return;
+      
+      const expectedGroupIndex = Math.round(currentOffsetX / screenWidth);
+      
+      if (expectedGroupIndex !== currentGroupIndex) {
+        setCurrentGroupIndex(expectedGroupIndex);
       }
-
-      if (currentOffsetX > previousOffsetX.current) {
-        setCurrentGroupIndex(currentGroupIndex + 1); 
-      } else {
-        setCurrentGroupIndex(currentGroupIndex - 1);
-      }
-
+      
       previousOffsetX.current = currentOffsetX;
     },
     [setCurrentGroupIndex, currentGroupIndex],
