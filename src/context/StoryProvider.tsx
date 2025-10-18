@@ -196,7 +196,7 @@ export const StoryMediaControlProvider: React.FC<
       const value = currentTime / seekableDuration;
       setCurrentStory(cs => ({index: cs.index, progress: Math.min(1, value)}));
 
-      if (value >= 0.5) {
+      if (value >= 0.99) {
         onStoryMarkedAsViewed?.(stories[index].storyId.toString());
         goToStory(index + 1);
       }
